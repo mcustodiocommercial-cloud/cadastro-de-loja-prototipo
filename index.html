@@ -9,6 +9,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root{
     --navy: #1E3A5F;
@@ -109,6 +110,11 @@
   main.mode-preencher #doc-tabs-wrap,
   main.mode-preencher #zoom-controls{ display: none !important; }
   main.mode-documentos .panel{ display: none !important; }
+  #extrator-embed{ display: none; }
+  main.mode-extrator .panel,
+  main.mode-extrator .sheet-wrap,
+  main.mode-extrator .toolbar-row{ display: none !important; }
+  main.mode-extrator #extrator-embed{ display: block; }
 
   .panel{
     background: var(--paper);
@@ -942,6 +948,346 @@
     @page{ size: letter; margin: 0; }
     @page wlpage{ size: A4; margin: 31mm 17.1mm 17.4mm 16.6mm; }
   }
+
+  /* ===== Extrator de Sócios (PDF + IA) embutido — CSS escopado dentro de #extrator-embed ===== */
+#extrator-embed{
+    --bg: #F6F5F2;
+    --paper: #FFFFFF;
+    --ink: #1E2530;
+    --ink-soft: #5A6472;
+    --line: #DFE0DB;
+    --navy: #2A4D69;
+    --navy-dark: #1B3247;
+    --gold: #B8912B;
+    --gold-soft: #F3E9CE;
+    --danger: #A13F3F;
+  }
+#extrator-embed *{box-sizing:border-box;}
+#extrator-embed{
+    margin:0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+#extrator-embed .ext-header{
+    background: var(--navy-dark);
+    color: #fff;
+    padding: 22px 32px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    border-bottom: 3px solid var(--gold);
+  }
+#extrator-embed .ext-header .selo{
+    width:36px; height:36px; border-radius:50%;
+    border:2px solid var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:14px; color: var(--gold);
+    flex-shrink:0;
+  }
+#extrator-embed #apiKeyBtn{
+    background: rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.25);
+    color:#E7EDF2;
+    font-size:12.5px;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    flex-shrink:0;
+    white-space:nowrap;
+  }
+#extrator-embed #apiKeyBtn:hover{ background: rgba(255,255,255,.16); }
+#extrator-embed #apiKeyBtn.set{ border-color: var(--gold); color: var(--gold); }
+#extrator-embed .ext-header h1{
+    font-size:18px;
+    margin:0;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+#extrator-embed .ext-header p{
+    margin:2px 0 0;
+    font-size:12.5px;
+    color:#C7D2DC;
+  }
+#extrator-embed #mainSocios, #extrator-embed #mainCnpj{
+    max-width:1200px;
+    margin:0 auto;
+    padding: 28px 24px 60px;
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:22px;
+  }
+@media(min-width:960px){
+#extrator-embed #mainSocios, #extrator-embed #mainCnpj{ grid-template-columns: 380px 1fr; align-items:start; }
+}
+#extrator-embed .tabs{
+    max-width:1200px;
+    margin: 20px auto 0;
+    padding: 0 24px;
+    display:flex;
+    gap:8px;
+  }
+#extrator-embed .tab-btn{
+    background:#EDECE8;
+    border:1px solid var(--line);
+    border-bottom:none;
+    color: var(--ink-soft);
+    font-size:13px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:8px 8px 0 0;
+    cursor:pointer;
+  }
+#extrator-embed .tab-btn.active{
+    background: var(--paper);
+    color: var(--navy-dark);
+    border-color: var(--line);
+  }
+#extrator-embed .panel{
+    background: var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+#extrator-embed .panel-header{
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color: var(--ink-soft);
+    background:#FBFAF8;
+  }
+#extrator-embed #dropzone, #extrator-embed #dropzoneCnpj{
+    margin:18px;
+    border:2px dashed var(--line);
+    border-radius:8px;
+    padding:34px 18px;
+    text-align:center;
+    cursor:pointer;
+    transition: border-color .15s, background .15s;
+  }
+#extrator-embed #dropzone:hover, #extrator-embed #dropzone.drag, #extrator-embed #dropzoneCnpj:hover, #extrator-embed #dropzoneCnpj.drag{
+    border-color: var(--navy);
+    background: #F1F5F8;
+  }
+#extrator-embed #dropzone svg, #extrator-embed #dropzoneCnpj svg{ width:34px; height:34px; color:var(--ink-soft); margin-bottom:8px;}
+#extrator-embed #dropzone .primary, #extrator-embed #dropzoneCnpj .primary{ font-size:14.5px; font-weight:600; color:var(--ink); }
+#extrator-embed #dropzone .secondary, #extrator-embed #dropzoneCnpj .secondary{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+#extrator-embed #fileInput{ display:none; }
+#extrator-embed #fileMeta, #extrator-embed #fileMetaCnpj{
+    margin: 0 18px 18px;
+    font-size:12.5px;
+    color: var(--ink-soft);
+    display:none;
+  }
+#extrator-embed #fileMeta.show, #extrator-embed #fileMetaCnpj.show{ display:block; }
+#extrator-embed #fileMeta strong, #extrator-embed #fileMetaCnpj strong{ color: var(--ink); }
+#extrator-embed #status, #extrator-embed #statusCnpj{
+    margin: 0 18px 14px;
+    font-size:13px;
+    display:none;
+    padding:10px 12px;
+    border-radius:6px;
+  }
+#extrator-embed #status.show, #extrator-embed #statusCnpj.show{ display:block; }
+#extrator-embed #status.info, #extrator-embed #statusCnpj.info{ background:#EEF3F7; color:var(--navy-dark); }
+#extrator-embed #status.error, #extrator-embed #statusCnpj.error{ background:#F7EAEA; color:var(--danger); }
+#extrator-embed #pdfViewer, #extrator-embed #pdfViewerCnpj{
+    padding: 0 18px 18px;
+    max-height:600px;
+    overflow:auto;
+  }
+#extrator-embed #pdfViewer canvas, #extrator-embed #pdfViewerCnpj canvas{
+    width:100%;
+    display:block;
+    border:1px solid var(--line);
+    border-radius:4px;
+    margin-bottom:10px;
+  }
+#extrator-embed .page-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding: 0 18px 16px;
+    font-size:12.5px;
+    color: var(--ink-soft);
+  }
+#extrator-embed .page-nav button{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:5px;
+    padding:5px 10px;
+    cursor:pointer;
+    font-size:12.5px;
+  }
+#extrator-embed .page-nav button:disabled{ opacity:.4; cursor:default; }
+#extrator-embed #results{ padding:20px; }
+#extrator-embed .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color: var(--ink-soft);
+  }
+#extrator-embed .empty-state svg{ width:40px;height:40px; margin-bottom:10px; opacity:.5; }
+#extrator-embed .socio-card{
+    background:#FDFCFA;
+    border:1px solid var(--line);
+    border-left:4px solid var(--navy);
+    border-radius:8px;
+    padding:18px 20px;
+    margin-bottom:16px;
+  }
+#extrator-embed .socio-card h3{
+    margin:0 0 12px;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+#extrator-embed .badge-pct{
+    background: var(--gold-soft);
+    color: #7A5E14;
+    border:1px solid #E4D19C;
+    font-size:12px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:20px;
+  }
+#extrator-embed .field-grid{
+    display:grid;
+    grid-template-columns: 140px 1fr;
+    row-gap:8px;
+    column-gap:12px;
+    font-size:13.5px;
+  }
+#extrator-embed .field-grid dt{
+    color: var(--ink-soft);
+    font-weight:600;
+  }
+#extrator-embed .field-grid dd{
+    margin:0;
+  }
+#extrator-embed .field-grid dd.missing{
+    color:#B08A00;
+    font-style:italic;
+  }
+#extrator-embed .mono{ font-variant-numeric: tabular-nums; }
+#extrator-embed details.raw{
+    margin-top:22px;
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+#extrator-embed details.raw summary{
+    cursor:pointer;
+    font-size:12.5px;
+    color: var(--ink-soft);
+    font-weight:600;
+  }
+#extrator-embed details.raw pre{
+    white-space:pre-wrap;
+    font-size:11.5px;
+    line-height:1.5;
+    background:#FBFAF8;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:14px;
+    max-height:260px;
+    overflow:auto;
+    margin-top:10px;
+    color:#444;
+  }
+#extrator-embed .disclaimer{
+    font-size:11.5px;
+    color: var(--ink-soft);
+    margin-top:18px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+#extrator-embed .ai-banner{
+    background:#EEF3F7;
+    border:1px solid #CFE0EA;
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+#extrator-embed .ai-banner p{ margin:0; font-size:13px; color: var(--navy-dark); }
+#extrator-embed .btn-ai{
+    background: var(--navy);
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:9px 16px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+#extrator-embed .btn-ai:hover{ background: var(--navy-dark); }
+#extrator-embed .btn-ai:disabled{ opacity:.6; cursor:default; }
+#extrator-embed .btn-ai-ghost{
+    background:transparent;
+    border:1px solid var(--navy);
+    color: var(--navy);
+  }
+#extrator-embed .btn-ai-ghost:hover{ background:#EEF3F7; }
+#extrator-embed .source-tag{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    padding:2px 8px;
+    border-radius:20px;
+    margin-left:8px;
+    vertical-align:middle;
+  }
+#extrator-embed .source-tag.regex{ background:#E7EEF2; color: var(--navy-dark); }
+#extrator-embed .source-tag.ia{ background: var(--gold-soft); color:#7A5E14; }
+#extrator-embed .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(20,25,32,.55);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+#extrator-embed .modal-overlay.show{ display:flex; }
+#extrator-embed .modal-box{
+    background:#fff;
+    border-radius:10px;
+    max-width:440px;
+    width:100%;
+    padding:24px;
+  }
+#extrator-embed .modal-box h2{ margin:0 0 6px; font-size:16px; }
+#extrator-embed .modal-box p{ font-size:12.5px; color: var(--ink-soft); line-height:1.5; margin:0 0 14px; }
+#extrator-embed .modal-box input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:13px;
+    box-sizing:border-box;
+    margin-bottom:14px;
+  }
+#extrator-embed .modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
+#extrator-embed .modal-actions button{
+    padding:8px 16px;
+    border-radius:6px;
+    font-size:13px;
+    cursor:pointer;
+    border:1px solid var(--line);
+    background:#fff;
+  }
+#extrator-embed .modal-actions .save{ background: var(--navy); color:#fff; border-color: var(--navy); }
+#extrator-embed .modal-actions .clear{ color: var(--danger); border-color:#EAD0D0; }
 </style>
 </head>
 <body>
@@ -957,6 +1303,7 @@
     <div class="view-mode-tabs">
       <button type="button" class="view-mode-tab active" data-mode="preencher">📝 Preencher dados</button>
       <button type="button" class="view-mode-tab" data-mode="documentos">📄 Ver documentos</button>
+      <button type="button" class="view-mode-tab" data-mode="extrator">📥 Extrair Dados (PDF + IA)</button>
     </div>
   </div>
 </header>
@@ -975,13 +1322,119 @@
     </div>
   </div>
 
-  <div class="panel" id="extrator-banner" style="display:none; border:1px solid #C7A544; background:#FBF6E8; border-radius:8px; padding:16px 18px; margin-bottom:18px;">
-    <strong style="display:block; margin-bottom:6px;">📤 Dados extraídos disponíveis</strong>
-    <p id="extrator-banner-resumo" style="margin:0 0 12px; font-size:13.5px; color:#5A5230;"></p>
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button type="button" id="extrator-banner-aplicar" style="background:#2A4D69; color:#fff; border:none; border-radius:6px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer;">Aplicar ao formulário</button>
-      <button type="button" id="extrator-banner-descartar" style="background:transparent; border:1px solid #C7A544; color:#5A5230; border-radius:6px; padding:8px 16px; font-size:13px; cursor:pointer;">Descartar</button>
+  <div id="extrator-embed">
+
+
+<div class="ext-header">
+  <div class="selo">JC</div>
+  <div style="flex:1;">
+    <h1>Extrator de Sócios — Contrato Social</h1>
+    <p>Leitura automática de nome, endereço e participação societária a partir do PDF</p>
+  </div>
+  <button id="enviarCadastroBtn" title="Enviar os dados extraídos para o sistema de Cadastro" style="background: rgba(184,145,43,.18); border:1px solid var(--gold); color:#F3E9CE; font-size:12.5px; padding:7px 12px; border-radius:20px; cursor:pointer; flex-shrink:0; white-space:nowrap; margin-right:10px; opacity:.5;" disabled>📤 Enviar para o Cadastro</button>
+  <button id="apiKeyBtn" title="Configurar chave da API Gemini (grátis)">🔑 Chave de API (grátis)</button>
+</div>
+
+<div class="modal-overlay" id="enviarCadastroModal">
+  <div class="modal-box">
+    <h2>Enviar para o Cadastro</h2>
+    <p id="enviarCadastroResumo" style="margin-bottom:14px;"></p>
+    <p style="font-size:11.5px; color:var(--ink-soft);">Você será redirecionado para o sistema de Cadastro, onde poderá conferir e aplicar esses dados ao formulário.</p>
+    <div class="modal-actions">
+      <button id="enviarCadastroCancelBtn">Cancelar</button>
+      <button class="save" id="enviarCadastroConfirmBtn">Enviar e abrir Cadastro</button>
     </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="apiKeyModal">
+  <div class="modal-box">
+    <h2>Chave da API Gemini</h2>
+    <p>
+      Usamos a <strong>API gratuita do Google Gemini</strong> como modo de leitura por IA —
+      não tem cartão de crédito envolvido. Pegue sua chave grátis em
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+      (entra com sua conta Google, clica em "Create API key", copia e cola aqui).
+      A chave fica salva só no seu navegador (nunca é enviada pra nenhum lugar além do Google).
+    </p>
+    <input type="password" id="apiKeyInput" placeholder="Cole sua chave aqui (começa com AIza...)">
+    <div class="modal-actions">
+      <button class="clear" id="apiKeyClearBtn">Remover chave</button>
+      <button id="apiKeyCancelBtn">Cancelar</button>
+      <button class="save" id="apiKeySaveBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tabSociosBtn">📄 Contrato Social</button>
+  <button class="tab-btn" id="tabCnpjBtn">🪪 Cartão CNPJ</button>
+</div>
+
+<div id="mainSocios">
+  <section class="panel">
+    <div class="panel-header">Documento</div>
+    <div id="dropzone">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9m0 0-3 3m3-3 3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" /></svg>
+      <div class="primary">Clique ou arraste o PDF do contrato social</div>
+      <div class="secondary">O arquivo é lido só no seu navegador — nada é enviado a servidor nenhum</div>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf">
+    <div id="fileMeta"></div>
+    <div id="status"></div>
+
+    <div id="pdfViewer"></div>
+    <div class="page-nav" id="pageNav" style="display:none;">
+      <button id="prevPage">‹ anterior</button>
+      <span id="pageInfo">página 1 / 1</span>
+      <button id="nextPage">próxima ›</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">Sócios identificados</div>
+    <div id="results">
+      <div class="empty-state">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+        <div>Envie um PDF para ver os sócios extraídos aqui.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="mainCnpj" style="display:none;">
+  <section class="panel">
+    <div class="panel-header">Documento</div>
+    <div id="dropzoneCnpj">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9m0 0-3 3m3-3 3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" /></svg>
+      <div class="primary">Clique ou arraste o PDF do Cartão CNPJ</div>
+      <div class="secondary">Comprovante de Inscrição e de Situação Cadastral da Receita Federal</div>
+    </div>
+    <input type="file" id="fileInputCnpj" accept="application/pdf">
+    <div id="fileMetaCnpj"></div>
+    <div id="statusCnpj"></div>
+
+    <div id="pdfViewerCnpj"></div>
+    <div class="page-nav" id="pageNavCnpj" style="display:none;">
+      <button id="prevPageCnpj">‹ anterior</button>
+      <span id="pageInfoCnpj">página 1 / 1</span>
+      <button id="nextPageCnpj">próxima ›</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">Dados do CNPJ</div>
+    <div id="resultsCnpj">
+      <div class="empty-state">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+        <div>Envie o PDF do Cartão CNPJ para ver os dados extraídos aqui.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
   </div>
 
   <section class="panel">
@@ -994,7 +1447,7 @@
 
         <div class="paste-box">
           <div class="paste-label">Colar Comprovante de CNPJ (Receita Federal)</div>
-          <small>Copie o texto do comprovante de inscrição da Receita Federal e cole abaixo. Depois clique em "Puxar dados". Dica: o <a href="#" id="link-extrator" target="_blank" rel="noopener">Extrator de Dados (PDF + IA)</a> faz isso automaticamente a partir do PDF, sem precisar copiar/colar.</small>
+          <small>Copie o texto do comprovante de inscrição da Receita Federal e cole abaixo. Depois clique em "Puxar dados". Dica: a aba <a href="#" id="link-extrator">📥 Extrair Dados</a> faz isso automaticamente a partir do PDF (com IA), sem precisar copiar/colar.</small>
           <textarea id="colar_cnpj" placeholder="Cole aqui o texto do Comprovante de Inscrição e de Situação Cadastral..."></textarea>
           <button type="button" class="pull" id="btn-puxar" style="margin-top:10px;">🔎 Puxar dados automaticamente</button>
           <div class="pull-status" id="pull-status"></div>
@@ -1903,14 +2356,6 @@
     "repr_profissao","repr_renda_mensal","repr_outras_rendas","repr_cpf_conjuge","numero_dn"];
   var STORAGE_KEY = "carta-dados-bancarios-vw-v1";
 
-  // ---------- Ponte com o Extrator de Dados (PDF + IA) ----------
-  // Repositório separado no GitHub Pages. Troque a URL abaixo quando o
-  // repositório do cadastro estiver publicado (mesma conta do GitHub =
-  // mesmo domínio *.github.io, então o localStorage é compartilhado
-  // entre os dois sites automaticamente).
-  var EXTRATOR_URL = "https://mcustodiocommercial-cloud.github.io/extrator-dados-pdf/"; // repo do Extrator (correto)
-  var EXTRATOR_BRIDGE_KEY = "extrator-para-cadastro-v1";
-
 
   var MESES_MIN = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 
@@ -2059,14 +2504,6 @@
   }
 
   // ---------- Aplicar dados vindos do Extrator (PDF + IA) ----------
-  function resumoExtrator(payload){
-    var partes = [];
-    if(payload.cnpjData && payload.cnpjData.nomeEmpresarial){ partes.push(payload.cnpjData.nomeEmpresarial); }
-    var n = (payload.socios || []).length;
-    if(n){ partes.push(n + (n === 1 ? " sócio identificado" : " sócios identificados")); }
-    return partes.length ? partes.join(" — ") : "Dados prontos para conferência.";
-  }
-
   function aplicarDadosDoExtrator(payload){
     var c = payload.cnpjData || {};
 
@@ -2115,32 +2552,8 @@
 
     render();
   }
-
-  function initExtratorBridge(){
-    var raw;
-    try{ raw = localStorage.getItem(EXTRATOR_BRIDGE_KEY); }catch(e){ raw = null; }
-    if(!raw){ return; }
-
-    var payload;
-    try{ payload = JSON.parse(raw); }catch(e){ 
-      try{ localStorage.removeItem(EXTRATOR_BRIDGE_KEY); }catch(e2){}
-      return;
-    }
-
-    var banner = document.getElementById("extrator-banner");
-    document.getElementById("extrator-banner-resumo").textContent = resumoExtrator(payload);
-    banner.style.display = "block";
-
-    document.getElementById("extrator-banner-aplicar").addEventListener("click", function(){
-      aplicarDadosDoExtrator(payload);
-      try{ localStorage.removeItem(EXTRATOR_BRIDGE_KEY); }catch(e){}
-      banner.style.display = "none";
-    });
-    document.getElementById("extrator-banner-descartar").addEventListener("click", function(){
-      try{ localStorage.removeItem(EXTRATOR_BRIDGE_KEY); }catch(e){}
-      banner.style.display = "none";
-    });
-  }
+  // Exposta pro script do Extrator (embutido na mesma página) chamar direto.
+  window.aplicarDadosDoExtrator = aplicarDadosDoExtrator;
 
 
   var FICHA_STORAGE_KEY = "carta-dados-bancarios-vw-ficha-v1";
@@ -2442,8 +2855,10 @@
 
     render();
     renderFichaExtras();
-    initExtratorBridge();
-    document.getElementById("link-extrator").href = EXTRATOR_URL;
+    document.getElementById("link-extrator").addEventListener("click", function(e){
+      e.preventDefault();
+      setViewMode("extrator");
+    });
 
     document.getElementById("btn-puxar").addEventListener("click", function(){
       var texto = document.getElementById("colar_cnpj").value;
@@ -2558,13 +2973,16 @@
     var VIEW_MODE_KEY = "carta-dados-bancarios-vw-modo-visualizacao";
 
     function setViewMode(mode){
-      mainEl.classList.remove("mode-preencher", "mode-documentos");
+      mainEl.classList.remove("mode-preencher", "mode-documentos", "mode-extrator");
       mainEl.classList.add("mode-" + mode);
       document.querySelectorAll(".view-mode-tab").forEach(function(btn){
         btn.classList.toggle("active", btn.getAttribute("data-mode") === mode);
       });
       try{ localStorage.setItem(VIEW_MODE_KEY, mode); }catch(e){}
     }
+    // Exposta pro script do Extrator chamar depois de aplicar os dados,
+    // pra já voltar o usuário pra tela de preencher/conferir.
+    window.irParaPreencherDados = function(){ setViewMode("preencher"); };
 
     document.querySelectorAll(".view-mode-tab").forEach(function(btn){
       btn.addEventListener("click", function(){
@@ -2574,7 +2992,8 @@
 
     var savedMode = null;
     try{ savedMode = localStorage.getItem(VIEW_MODE_KEY); }catch(e){}
-    setViewMode(savedMode === "documentos" ? "documentos" : "preencher");
+    var modosValidos = ["preencher","documentos","extrator"];
+    setViewMode(modosValidos.indexOf(savedMode) !== -1 ? savedMode : "preencher");
 
     // ---- Zoom da pré-visualização ----
     function setZoom(z){
@@ -2603,5 +3022,907 @@
 })();
 </script>
 
+
+<script>
+/* ===== Extrator de Sócios (PDF + IA) embutido ===== */
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileMeta = document.getElementById('fileMeta');
+const statusEl = document.getElementById('status');
+const pdfViewer = document.getElementById('pdfViewer');
+const pageNav = document.getElementById('pageNav');
+const pageInfo = document.getElementById('pageInfo');
+const prevBtn = document.getElementById('prevPage');
+const nextBtn = document.getElementById('nextPage');
+const resultsEl = document.getElementById('results');
+const apiKeyBtn = document.getElementById('apiKeyBtn');
+const apiKeyModal = document.getElementById('apiKeyModal');
+const apiKeyInput = document.getElementById('apiKeyInput');
+const apiKeySaveBtn = document.getElementById('apiKeySaveBtn');
+const apiKeyCancelBtn = document.getElementById('apiKeyCancelBtn');
+const apiKeyClearBtn = document.getElementById('apiKeyClearBtn');
+
+// ====================================================================
+// PROXY DA EQUIPE (recomendado) — Cloudflare Worker
+// Depois de publicar o worker.js (veja instruções no próprio arquivo), cole
+// aqui a URL dele. Com isso, NINGUÉM da equipe precisa configurar chave — a
+// IA já funciona sozinha pra todo mundo que abrir o site, com segurança,
+// porque a chave real fica só no Worker, nunca no navegador de ninguém.
+// ====================================================================
+const WORKER_URL = 'https://winter-salad-78e6.mcustodio-commercial.workers.dev'; // proxy do time (chave fica em segredo no Cloudflare)
+
+// ====================================================================
+// Envio dos dados extraídos pro formulário do Cadastro: como agora tudo
+// vive na mesma página, isso é feito com uma chamada de função direta
+// (ver window.aplicarDadosDoExtrator, exposta pelo script do Cadastro),
+// sem precisar de localStorage nem redirecionamento entre sites.
+// ====================================================================
+
+let lastCnpjData = null;
+let lastSociosData = null;
+
+const enviarCadastroBtn = document.getElementById('enviarCadastroBtn');
+const enviarCadastroModal = document.getElementById('enviarCadastroModal');
+const enviarCadastroResumo = document.getElementById('enviarCadastroResumo');
+const enviarCadastroCancelBtn = document.getElementById('enviarCadastroCancelBtn');
+const enviarCadastroConfirmBtn = document.getElementById('enviarCadastroConfirmBtn');
+
+function atualizarBotaoEnviarCadastro(){
+  const temDados = !!(lastCnpjData || (lastSociosData && lastSociosData.length));
+  enviarCadastroBtn.disabled = !temDados;
+  enviarCadastroBtn.style.opacity = temDados ? '1' : '.5';
+}
+
+enviarCadastroBtn.addEventListener('click', () => {
+  const partes = [];
+  if (lastCnpjData && lastCnpjData.nomeEmpresarial) partes.push(`Empresa: <strong>${escapeHtml(lastCnpjData.nomeEmpresarial)}</strong>`);
+  if (lastSociosData && lastSociosData.length) partes.push(`${lastSociosData.length} sócio(s) identificado(s)`);
+  enviarCadastroResumo.innerHTML = partes.length
+    ? partes.join('<br>')
+    : 'Nenhum dado extraído ainda — envie um PDF nas abas ao lado antes de enviar.';
+  enviarCadastroModal.classList.add('show');
+});
+enviarCadastroCancelBtn.addEventListener('click', () => enviarCadastroModal.classList.remove('show'));
+enviarCadastroModal.addEventListener('click', (e) => { if (e.target === enviarCadastroModal) enviarCadastroModal.classList.remove('show'); });
+enviarCadastroConfirmBtn.addEventListener('click', () => {
+  const payload = {
+    cnpjData: lastCnpjData || null,
+    socios: lastSociosData || [],
+    enviadoEm: new Date().toISOString()
+  };
+  // Extrator e Cadastro vivem na mesma página agora — aplica direto no
+  // formulário do Cadastro e troca pra aba "Preencher dados" pra conferir.
+  if (typeof window.aplicarDadosDoExtrator === 'function'){
+    window.aplicarDadosDoExtrator(payload);
+  }
+  if (typeof window.irParaPreencherDados === 'function'){
+    window.irParaPreencherDados();
+  }
+  enviarCadastroModal.classList.remove('show');
+});
+
+
+// ====================================================================
+// CHAVE DE API PESSOAL (modo alternativo, só usado se WORKER_URL acima
+// estiver vazio) — cada pessoa pode colar a própria chave gratuita clicando
+// em "🔑 Chave de API" no site. Serve como plano B, ou pra testes sozinho.
+// ====================================================================
+const DEFAULT_GEMINI_API_KEY = ''; // <- cole sua chave aqui dentro das aspas (opcional)
+
+const GEMINI_KEY_STORAGE = 'extrator_socios_gemini_key';
+
+function getApiKey(){ return localStorage.getItem(GEMINI_KEY_STORAGE) || DEFAULT_GEMINI_API_KEY || ''; }
+function aiAvailable(){ return !!WORKER_URL || !!getApiKey(); }
+function setApiKeyUiState(){
+  apiKeyBtn.classList.toggle('set', aiAvailable());
+  if (WORKER_URL) apiKeyBtn.title = 'IA já configurada pelo proxy da equipe — clique só se quiser usar uma chave pessoal';
+}
+setApiKeyUiState();
+
+apiKeyBtn.addEventListener('click', () => {
+  apiKeyInput.value = getApiKey();
+  apiKeyModal.classList.add('show');
+});
+apiKeyCancelBtn.addEventListener('click', () => apiKeyModal.classList.remove('show'));
+apiKeyModal.addEventListener('click', (e) => { if (e.target === apiKeyModal) apiKeyModal.classList.remove('show'); });
+apiKeySaveBtn.addEventListener('click', () => {
+  const val = apiKeyInput.value.trim();
+  if (val) localStorage.setItem(GEMINI_KEY_STORAGE, val);
+  setApiKeyUiState();
+  apiKeyModal.classList.remove('show');
+});
+apiKeyClearBtn.addEventListener('click', () => {
+  localStorage.removeItem(GEMINI_KEY_STORAGE);
+  apiKeyInput.value = '';
+  setApiKeyUiState();
+  apiKeyModal.classList.remove('show');
+});
+
+let pdfDoc = null;
+let currentPage = 1;
+
+// ---------- Abas ----------
+const tabSociosBtn = document.getElementById('tabSociosBtn');
+const tabCnpjBtn = document.getElementById('tabCnpjBtn');
+const mainSocios = document.getElementById('mainSocios');
+const mainCnpj = document.getElementById('mainCnpj');
+tabSociosBtn.addEventListener('click', () => {
+  tabSociosBtn.classList.add('active'); tabCnpjBtn.classList.remove('active');
+  mainSocios.style.display = ''; mainCnpj.style.display = 'none';
+});
+tabCnpjBtn.addEventListener('click', () => {
+  tabCnpjBtn.classList.add('active'); tabSociosBtn.classList.remove('active');
+  mainCnpj.style.display = ''; mainSocios.style.display = 'none';
+});
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function showStatus(msg, type){
+  statusEl.textContent = msg;
+  statusEl.className = 'show ' + (type || 'info');
+}
+function hideStatus(){
+  statusEl.className = '';
+}
+
+let lastExtractedText = '';
+
+async function handleFile(file){
+  if (file.type !== 'application/pdf'){
+    showStatus('Esse arquivo não é um PDF. Envie o PDF do contrato social.', 'error');
+    return;
+  }
+  fileMeta.innerHTML = `<strong>${file.name}</strong> · ${(file.size/1024/1024).toFixed(2)} MB`;
+  fileMeta.classList.add('show');
+  showStatus('Lendo o documento…', 'info');
+  resultsEl.innerHTML = '<div class="empty-state">Analisando o PDF…</div>';
+
+  try{
+    const buffer = await file.arrayBuffer();
+    pdfDoc = await pdfjsLib.getDocument({ data: buffer }).promise;
+    currentPage = 1;
+    pageNav.style.display = 'flex';
+    await renderPage(currentPage);
+
+    const fullText = await extractFullText(pdfDoc);
+    lastExtractedText = fullText;
+    let socios = parseSocios(fullText);
+
+    if (aiAvailable()){
+      // Se já existe uma chave salva, deixamos a IA como fonte principal — ela lida
+      // muito melhor com a variação de formato entre contratos do que o regex.
+      showStatus(socios.length ? 'Conferindo com IA…' : 'Leitura automática não encontrou os sócios — tentando com IA…', 'info');
+      resultsEl.innerHTML = '<div class="empty-state">🤖 Lendo com IA…</div>';
+      try{
+        const socioIA = await extractWithAI(fullText);
+        renderResults(socioIA, fullText, 'ia');
+        hideStatus();
+        return;
+      }catch(err){
+        console.error(err);
+        showStatus('A IA não conseguiu processar: ' + err.message, 'error');
+        // segue abaixo e mostra pelo menos o resultado (mesmo vazio) da leitura automática
+      }
+    }
+
+    renderResults(socios, fullText, 'regex');
+    if (!aiAvailable() || socios.length) hideStatus();
+  }catch(err){
+    console.error(err);
+    showStatus('Não consegui ler esse PDF. Confirme se o arquivo não está corrompido e tente de novo.', 'error');
+    resultsEl.innerHTML = '<div class="empty-state">Não foi possível processar o documento.</div>';
+  }
+}
+
+async function renderPage(num){
+  const page = await pdfDoc.getPage(num);
+  const viewport = page.getViewport({ scale: 1.4 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  pdfViewer.innerHTML = '';
+  pdfViewer.appendChild(canvas);
+  pageInfo.textContent = `página ${num} / ${pdfDoc.numPages}`;
+  prevBtn.disabled = num <= 1;
+  nextBtn.disabled = num >= pdfDoc.numPages;
+}
+prevBtn.addEventListener('click', () => { if(currentPage>1){ currentPage--; renderPage(currentPage);} });
+nextBtn.addEventListener('click', () => { if(pdfDoc && currentPage<pdfDoc.numPages){ currentPage++; renderPage(currentPage);} });
+
+// Usado quando o PDF é uma digitalização/foto sem texto real: renderiza as
+// primeiras páginas como imagem (JPEG) pra mandar pro Gemini "ler" visualmente,
+// já que não há texto nenhum pra extrair via pdf.js nesse caso.
+async function renderPagesAsImageParts(doc, numPages){
+  const parts = [];
+  for (let i = 1; i <= numPages; i++){
+    const page = await doc.getPage(i);
+    const viewport = page.getViewport({ scale: 1.5 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+    parts.push({ inlineData: { mimeType: 'image/jpeg', data: base64 } });
+  }
+  return parts;
+}
+
+async function extractFullText(doc){
+  // Reconstrói linhas reais da página usando a posição Y de cada fragmento de texto,
+  // em vez de simplesmente concatenar tudo — isso é essencial porque as cláusulas de
+  // sócio sempre começam no início de uma linha/parágrafo no documento original,
+  // e usamos essa estrutura como âncora na hora de procurar os sócios.
+  let fullText = '';
+  for (let i=1; i<=doc.numPages; i++){
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    const items = content.items.filter(it => it.str.trim().length > 0);
+    items.sort((a,b) => {
+      const ay = a.transform[5], by = b.transform[5];
+      if (Math.abs(ay - by) > 2) return by - ay; // topo pra baixo
+      return a.transform[4] - b.transform[4]; // esquerda pra direita
+    });
+    let lines = [];
+    let currentLine = [];
+    let lastY = null;
+    items.forEach(it => {
+      const y = it.transform[5];
+      if (lastY !== null && Math.abs(y - lastY) > 2){
+        lines.push(currentLine.join(' '));
+        currentLine = [];
+      }
+      currentLine.push(it.str);
+      lastY = y;
+    });
+    if (currentLine.length) lines.push(currentLine.join(' '));
+    fullText += lines.join('\n') + '\n';
+  }
+  return fullText;
+}
+
+// ---------- Extração via IA (Gemini, gratuito) ----------
+
+// Monta as partes (texto OU imagens das páginas, se o PDF for uma digitalização
+// sem texto real) e chama o Gemini, devolvendo o objeto JSON já validado contra
+// o schema pedido. Usada tanto pra sócios quanto pro Cartão CNPJ.
+async function callGeminiJSON(instructions, fullText, schema, docRef){
+  const apiKey = getApiKey();
+  if (!WORKER_URL && !apiKey){
+    apiKeyModal.classList.add('show');
+    throw new Error('Configure sua chave de API primeiro (ou peça pro administrador configurar o Worker do time — veja worker.js).');
+  }
+
+  // Se o PDF extraiu pouco ou nenhum texto, ele provavelmente é uma digitalização/foto
+  // sem camada de texto real. Nesse caso, em vez de mandar texto (que viria vazio),
+  // mandamos as PÁGINAS COMO IMAGEM pro Gemini "ler" visualmente — o modelo suporta
+  // isso nativamente (é multimodal).
+  const isScanned = fullText.replace(/\s/g,'').length < 200;
+  let parts;
+  if (isScanned && docRef){
+    const imageParts = await renderPagesAsImageParts(docRef, Math.min(docRef.numPages, 6));
+    parts = [
+      ...imageParts,
+      { text: instructions + '\n\nEsse PDF é uma digitalização/foto (sem texto selecionável) — leia o conteúdo diretamente nas imagens das páginas acima.' }
+    ];
+  } else {
+    parts = [{ text: instructions + `\n\nTexto do documento:\n"""\n${fullText.slice(0, 60000)}\n"""` }];
+  }
+
+  // O Google troca os nomes/versões dos modelos gratuitos com frequência — se um
+  // não existir mais (404) tentamos o próximo da lista. Colocamos o modelo mais
+  // estável (2.5) primeiro, já que o mais novo (3.5) costuma ficar sobrecarregado
+  // em picos de uso ("high demand" / 503) por ser o padrão de todo mundo agora.
+  const MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.5-flash'];
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function callModel(model){
+    const payload = {
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: schema,
+        temperature: 0
+      }
+    };
+    if (WORKER_URL){
+      // Passa pelo proxy da equipe — a chave real fica só no Worker, nunca aqui.
+      return fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, payload })
+      });
+    }
+    // Modo alternativo: chama o Google direto com a chave pessoal do usuário.
+    return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  let resp, lastErrBody = '', usedModel = '';
+  for (const model of MODEL_CANDIDATES){
+    usedModel = model;
+    // até 3 tentativas no mesmo modelo se ele estiver temporariamente sobrecarregado
+    for (let attempt = 0; attempt < 3; attempt++){
+      resp = await callModel(model);
+      if (resp.status !== 503 && resp.status !== 429) break;
+      lastErrBody = await resp.text().catch(() => '');
+      if (attempt < 2) await sleep(1500 * (attempt + 1)); // espera 1.5s, depois 3s
+    }
+    if (resp.status !== 404) break; // 404 = modelo não existe mais, tenta o próximo da lista
+    lastErrBody = await resp.text().catch(() => '');
+  }
+
+  if (!resp.ok){
+    // o corpo da resposta só pode ser lido uma vez — se já lemos durante as
+    // tentativas (503/429/404), reaproveitamos; senão lemos agora.
+    const errBody = lastErrBody || await resp.text().catch(() => '');
+    if (resp.status === 400 || resp.status === 403){
+      throw new Error('Chave de API inválida, expirada ou sem permissão (confira em 🔑 Chave de API). Detalhe: ' + errBody.slice(0,200));
+    }
+    if (resp.status === 429){
+      throw new Error('Limite gratuito da API atingido no momento — espere um pouco e tente de novo.');
+    }
+    if (resp.status === 503){
+      throw new Error('Os modelos gratuitos do Gemini estão sobrecarregados agora (isso é do Google, não do site). Espere um minuto e tente de novo.');
+    }
+    if (resp.status === 404){
+      throw new Error('Nenhum dos modelos do Gemini testados (' + MODEL_CANDIDATES.join(', ') + ') respondeu. O Google pode ter renomeado o modelo — me avise que eu atualizo.');
+    }
+    throw new Error(`Erro ${resp.status} na API do Gemini (modelo ${usedModel}). ` + errBody.slice(0,200));
+  }
+
+  const data = await resp.json();
+
+  if (!data.candidates || !data.candidates.length){
+    const blockReason = data.promptFeedback?.blockReason;
+    if (blockReason){
+      throw new Error('O Gemini bloqueou a resposta (motivo: ' + blockReason + '). Tente novamente ou use a leitura automática.');
+    }
+    throw new Error('O Gemini não retornou nenhuma resposta. Tente novamente em instantes.');
+  }
+
+  const textOut = data.candidates[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+  try{
+    return JSON.parse(textOut);
+  }catch(e){
+    throw new Error('A IA respondeu em um formato inesperado: ' + textOut.slice(0,150));
+  }
+}
+
+async function extractWithAI(fullText){
+  const schema = {
+    type: 'object',
+    properties: {
+      socios: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            nome: { type: 'string' },
+            endereco: { type: 'string' },
+            cpf: { type: 'string' },
+            rg: { type: 'string' },
+            quotas: { type: 'string' },
+            percentual: { type: 'string' }
+          },
+          required: ['nome']
+        }
+      }
+    },
+    required: ['socios']
+  };
+
+  const instructions = `Você vai identificar APENAS os sócios/quotistas de uma empresa a partir de um Contrato Social (ou Certidão de Inteiro Teor da JUCESP) em português — não inclua contadores, procuradores, secretários da junta comercial, julgadores ou testemunhas.
+
+Para cada sócio, extraia (deixe null quando a informação não existir, não invente nada):
+- nome: nome completo do sócio
+- endereco: endereço completo (logradouro, número, bairro, cidade, UF, CEP)
+- cpf: CPF do sócio
+- rg: RG do sócio
+- quotas: número de quotas que ele detém
+- percentual: percentual de participação na sociedade (ex: "50%")`;
+
+  const parsed = await callGeminiJSON(instructions, fullText, schema, typeof pdfDoc !== 'undefined' ? pdfDoc : null);
+  return (parsed.socios || []).filter(s => s.nome);
+}
+
+async function extractCnpjWithAI(fullText){
+  const schema = {
+    type: 'object',
+    properties: {
+      numeroInscricao: { type: 'string' },
+      nomeEmpresarial: { type: 'string' },
+      dataAbertura: { type: 'string' },
+      atividadePrincipal: { type: 'string' },
+      logradouro: { type: 'string' },
+      numero: { type: 'string' },
+      complemento: { type: 'string' },
+      cep: { type: 'string' },
+      bairro: { type: 'string' },
+      municipio: { type: 'string' },
+      uf: { type: 'string' }
+    }
+  };
+
+  const instructions = `Você vai ler um "Comprovante de Inscrição e de Situação Cadastral" (Cartão CNPJ da Receita Federal) em português e extrair estes campos exatos (deixe null quando a informação não existir, não invente nada):
+- numeroInscricao: número de inscrição do CNPJ, no formato XX.XXX.XXX/XXXX-XX
+- nomeEmpresarial: nome empresarial completo
+- dataAbertura: data de abertura, no formato DD/MM/AAAA
+- atividadePrincipal: código e descrição da atividade econômica principal (ex: "45.11-1-02 - Comércio a varejo de automóveis...")
+- logradouro: nome da rua/avenida do endereço (sem o número)
+- numero: número do endereço
+- complemento: complemento do endereço — se o campo estiver preenchido só com asteriscos (********) ou vazio, retorne string vazia "", não null
+- cep: CEP SEM o ponto entre os dois primeiros dígitos (ex: "08022-000", não "08.022-000")
+- bairro: bairro/distrito
+- municipio: município
+- uf: sigla do estado (2 letras)`;
+
+  return callGeminiJSON(instructions, fullText, schema, typeof pdfDocCnpj !== 'undefined' ? pdfDocCnpj : null);
+}
+
+function cleanSpaces(s){
+  return s.replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim();
+}
+
+
+function parseSocios(rawText){
+  // Mantemos as quebras de linha reais (vindas da posição no PDF) porque a âncora
+  // de cada sócio é "nome no início da linha" — juntar tudo numa string só é o que
+  // causava nomes capturados errado nas primeiras versões.
+  let text = rawText.replace(/\u00A0/g,' ').replace(/[ \t]+/g,' ');
+  // Alguns contratos escrevem "Sócio Administrador NOME, nacionalidade..." com o
+  // prefixo em Título Case (nem tudo maiúsculo) na mesma linha do nome. Como a
+  // âncora abaixo exige nome em CAIXA ALTA logo no início da linha, removemos
+  // esse prefixo primeiro pra não quebrar a captura.
+  text = text.replace(/^\s*s[óo]cio[- ]?(administrador[a]?)?[:\-]?\s*/gim, '');
+  const socios = new Map();
+  const order = [];
+
+  // 1) Âncora: início de linha + NOME EM CAIXA ALTA + "brasileiro/a" (com ou sem a
+  // palavra "nacionalidade:" no meio — contratos variam nisso).
+  // O nome usa apenas [A-ZÀ-Ü . espaço] (não \s) para não atravessar quebras de linha
+  // e não colar em títulos/cabeçalhos anteriores também em caixa alta.
+  const anchorRegex = /^([A-ZÀ-Ü][A-ZÀ-Ü. ]{4,60}?),?\s*(?:[Nn]acionalidade:?\s*)?[Bb]rasileir[ao]\b/gm;
+  let match;
+  while ((match = anchorRegex.exec(text)) !== null){
+    let nome = cleanSpaces(match[1]);
+    nome = nome.replace(/^(S[ÓO]CIO[- ]ADMINISTRADOR[A]?|ADMINISTRADOR[A]?)\s*/,'').trim();
+    if (nome.length < 5 || nome.split(' ').length < 2) continue; // exige nome+sobrenome
+    const key = nome.toUpperCase();
+    if (socios.has(key)) continue; // sócio já capturado numa cláusula anterior
+
+    // janela generosa após o nome pra pegar CPF/RG/endereço, que podem vir antes
+    // ou depois do CEP dependendo do contrato
+    const bloco = text.substr(match.index, 650);
+
+    const cpfMatch = bloco.match(/CPF\s*(?:n[ºo°.]?\s*)?[:\-]?\s*([\d]{2,3}[.\s]?[\d]{3}[.\s]?[\d]{3}[\s\-]?[\d]{2})/i);
+    const rgMatch = bloco.match(/RG\s*(?:n[ºo°.]?\s*)?[:\-]?\s*(\d[\d.\-]{4,14})/i);
+    const enderecoMatch = bloco.match(/domiciliad[oa]\(?a?\)?\s*(?:no\(a\)|no|na|em)\s*([\s\S]*?CEP:?\s*\d{2}\.?\d{3}-?\s*\d{3})/i);
+
+    let endereco = enderecoMatch ? cleanSpaces(enderecoMatch[1]) : null;
+    if (endereco) endereco = endereco.replace(/(\d)\s*-\s*(\d)/g, '$1-$2'); // conserta CEP quebrado em 2 linhas
+
+    socios.set(key, {
+      nome,
+      cpf: cpfMatch ? cpfMatch[1].replace(/\s/g,'') : null,
+      rg: rgMatch ? rgMatch[1] : null,
+      endereco,
+      percentual: null,
+      quotas: null
+    });
+    order.push(key);
+  }
+
+  // 2) Tabela de capital social: isolamos a seção entre "CAPITAL SOCIAL" e a
+  // próxima cláusula (nomes de cláusula variam: "TERCEIRA", "DA ADMINISTRAÇÃO" etc,
+  // então aceitamos qualquer um dos dois como fim de seção).
+  const tableSectionMatch = text.match(/CAPITAL SOCIAL([\s\S]{0,1800}?)(?:\nTERCEIRA\b|\nDA\s*ADMINISTRA[ÇC][ÃA]O)/i);
+  const tableSection = tableSectionMatch ? tableSectionMatch[1] : text;
+  const tableLines = tableSection.split('\n');
+
+  // Não presumimos a ORDEM das colunas (quotas/valor/percentual varia de contrato
+  // pra contrato) — em vez disso, achamos a linha da tabela que começa com o nome
+  // do sócio, e dentro dela identificamos cada número pelo seu formato: o que tem
+  // "%" é o percentual, o que vem depois de "R$" é o valor, e o que sobra é a quota.
+  order.forEach(key => {
+    const socio = socios.get(key);
+    const rowLine = tableLines.find(l => l.trim().startsWith(socio.nome));
+    if (!rowLine) return;
+    const rest = rowLine.trim().slice(socio.nome.length);
+
+    // Separador decimal aceito: vírgula ou ponto. Propositalmente NÃO aceitamos
+    // espaço como separador aqui — em contratos bem formatados isso gruda por
+    // engano no número de quotas vizinho (ex: "1.500 50%" virava "500,50%").
+    // Em PDFs escaneados/OCR onde a pontuação se perde, o percentual pode vir
+    // incompleto; por isso deixamos sempre visível o texto bruto pra conferência.
+    const pctMatch = rest.match(/(\d{1,3})(?:[.,](\d{1,2}))?\s*%/);
+    const valMatch = rest.match(/R\$\s*([\d.,\s]{3,15})/);
+
+    // "mascara" os trechos já identificados pra não deixar a busca de quotas
+    // atravessar por cima dos dígitos do percentual/valor
+    let masked = rest;
+    [pctMatch, valMatch].forEach(m => {
+      if (m) masked = masked.slice(0, m.index) + ' '.repeat(m[0].length) + masked.slice(m.index + m[0].length);
+    });
+    const quotasMatch = masked.match(/\d[\d.,]*\d|\d/);
+
+    socio.quotas = quotasMatch ? quotasMatch[0].trim() : null;
+    socio.percentual = pctMatch ? pctMatch[1] + (pctMatch[2] ? ',' + pctMatch[2] : '') + '%' : null;
+  });
+
+  return order.map(k => socios.get(k));
+}
+
+function renderResults(socios, rawText, source){
+  lastSociosData = socios && socios.length ? socios : lastSociosData;
+  atualizarBotaoEnviarCadastro();
+  let html = '';
+
+  const aiAvailable = true; // API gratuita do Gemini, só precisa da chave
+  const banner = source === 'regex'
+    ? `<div class="ai-banner">
+         <p>${socios.length ? 'Conferido tudo? Se algum dado ficou errado ou faltando, a IA costuma pegar variações que a leitura automática não prevê.' : 'Não encontrei o padrão esperado de sócio/endereço/participação com a leitura automática.'}</p>
+         <button class="btn-ai" id="tryAiBtn">🤖 ${socios.length ? 'Tentar de novo com IA' : 'Tentar com IA'}</button>
+       </div>`
+    : `<div class="ai-banner">
+         <p>Resultado gerado por IA (Gemini). Sempre confira contra o PDF antes de usar oficialmente.</p>
+         <button class="btn-ai btn-ai-ghost" id="tryRegexBtn">↺ Voltar pra leitura automática</button>
+       </div>`;
+
+  if (!socios.length){
+    html = `
+      ${banner}
+      <div class="empty-state" style="padding:30px 20px;">
+        ${source === 'ia'
+          ? 'A IA processou o documento mas não encontrou sócios nele. Pode ser um PDF com qualidade de imagem muito baixa, ou o documento pode não conter essa informação nas páginas lidas.'
+          : 'Confira o texto bruto extraído abaixo para ajustar manualmente, ou tente o botão de IA acima.'}
+      </div>
+      ${rawTextBlock(rawText)}
+    `;
+    resultsEl.innerHTML = html;
+    wireAiButtons(rawText);
+    return;
+  }
+
+  html += banner;
+
+  socios.forEach(s => {
+    html += `
+      <div class="socio-card">
+        <h3>${escapeHtml(s.nome)} ${s.percentual ? `<span class="badge-pct">${escapeHtml(s.percentual)} da sociedade</span>` : ''}</h3>
+        <dl class="field-grid">
+          <dt>Endereço</dt>
+          <dd class="${s.endereco ? '' : 'missing'}">${s.endereco ? escapeHtml(s.endereco) : 'não localizado — conferir manualmente'}</dd>
+          <dt>CPF</dt>
+          <dd class="mono ${s.cpf ? '' : 'missing'}">${s.cpf ? escapeHtml(s.cpf) : 'não localizado'}</dd>
+          <dt>RG</dt>
+          <dd class="mono ${s.rg ? '' : 'missing'}">${s.rg ? escapeHtml(s.rg) : 'não localizado'}</dd>
+          <dt>Quotas</dt>
+          <dd class="${s.quotas ? '' : 'missing'}">${s.quotas ? escapeHtml(s.quotas) : 'não localizado'}</dd>
+        </dl>
+      </div>
+    `;
+  });
+
+  html += `
+    <div class="disclaimer">
+      ${source === 'regex' ? 'Extração automática por leitura de texto do PDF' : 'Extração via IA (Gemini)'} — sempre confira os dados contra o documento original antes de usar oficialmente.
+    </div>
+  `;
+  html += rawTextBlock(rawText);
+
+  resultsEl.innerHTML = html;
+  wireAiButtons(rawText);
+}
+
+function wireAiButtons(rawText){
+  const tryAiBtn = document.getElementById('tryAiBtn');
+  if (tryAiBtn){
+    tryAiBtn.addEventListener('click', async () => {
+      tryAiBtn.disabled = true;
+      tryAiBtn.textContent = '🤖 Lendo com IA…';
+      try{
+        const socios = await extractWithAI(lastExtractedText || rawText);
+        renderResults(socios, lastExtractedText || rawText, 'ia');
+      }catch(err){
+        tryAiBtn.disabled = false;
+        tryAiBtn.textContent = '🤖 Tentar com IA';
+        if (err.message !== 'Configure sua chave de API primeiro.'){
+          showStatus(err.message, 'error');
+        }
+      }
+    });
+  }
+  const tryRegexBtn = document.getElementById('tryRegexBtn');
+  if (tryRegexBtn){
+    tryRegexBtn.addEventListener('click', () => {
+      const socios = parseSocios(lastExtractedText || rawText);
+      renderResults(socios, lastExtractedText || rawText, 'regex');
+    });
+  }
+}
+
+function rawTextBlock(rawText){
+  return `
+    <details class="raw">
+      <summary>Ver texto bruto extraído do PDF (para conferência manual)</summary>
+      <pre>${escapeHtml(rawText)}</pre>
+    </details>
+  `;
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ================= CNPJ (Comprovante de Inscrição e Situação Cadastral) =================
+const dropzoneCnpj = document.getElementById('dropzoneCnpj');
+const fileInputCnpj = document.getElementById('fileInputCnpj');
+const fileMetaCnpj = document.getElementById('fileMetaCnpj');
+const statusCnpjEl = document.getElementById('statusCnpj');
+const pdfViewerCnpj = document.getElementById('pdfViewerCnpj');
+const pageNavCnpj = document.getElementById('pageNavCnpj');
+const pageInfoCnpj = document.getElementById('pageInfoCnpj');
+const prevBtnCnpj = document.getElementById('prevPageCnpj');
+const nextBtnCnpj = document.getElementById('nextPageCnpj');
+const resultsCnpjEl = document.getElementById('resultsCnpj');
+
+let pdfDocCnpj = null;
+let currentPageCnpj = 1;
+
+dropzoneCnpj.addEventListener('click', () => fileInputCnpj.click());
+dropzoneCnpj.addEventListener('dragover', e => { e.preventDefault(); dropzoneCnpj.classList.add('drag'); });
+dropzoneCnpj.addEventListener('dragleave', () => dropzoneCnpj.classList.remove('drag'));
+dropzoneCnpj.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzoneCnpj.classList.remove('drag');
+  if (e.dataTransfer.files.length) handleFileCnpj(e.dataTransfer.files[0]);
+});
+fileInputCnpj.addEventListener('change', e => {
+  if (e.target.files.length) handleFileCnpj(e.target.files[0]);
+});
+
+function showStatusCnpj(msg, type){
+  statusCnpjEl.textContent = msg;
+  statusCnpjEl.className = 'show ' + (type || 'info');
+}
+function hideStatusCnpj(){ statusCnpjEl.className = ''; }
+
+async function handleFileCnpj(file){
+  if (file.type !== 'application/pdf'){
+    showStatusCnpj('Esse arquivo não é um PDF. Envie o PDF do Cartão CNPJ.', 'error');
+    return;
+  }
+  fileMetaCnpj.innerHTML = `<strong>${file.name}</strong> · ${(file.size/1024/1024).toFixed(2)} MB`;
+  fileMetaCnpj.classList.add('show');
+  showStatusCnpj('Lendo o documento…', 'info');
+  resultsCnpjEl.innerHTML = '<div class="empty-state">Analisando o PDF…</div>';
+
+  try{
+    const buffer = await file.arrayBuffer();
+    pdfDocCnpj = await pdfjsLib.getDocument({ data: buffer }).promise;
+    currentPageCnpj = 1;
+    pageNavCnpj.style.display = 'flex';
+    await renderPageCnpj(currentPageCnpj);
+
+    const fullText = await extractFullText(pdfDocCnpj); // mesma função usada no contrato social
+    const dados = parseCNPJ(fullText);
+
+    if (aiAvailable()){
+      // Mesma lógica do contrato social: se a IA está disponível (Worker do time ou
+      // chave pessoal), ela vira a fonte principal — lida melhor com layouts de
+      // tabela diferentes do que o regex, que assume rótulo e valor em linhas
+      // adjacentes (nem todo PDF do Cartão CNPJ organiza o texto assim).
+      showStatusCnpj('Conferindo com IA…', 'info');
+      resultsCnpjEl.innerHTML = '<div class="empty-state">🤖 Lendo com IA…</div>';
+      try{
+        const dadosIA = await extractCnpjWithAI(fullText);
+        renderResultsCnpj(dadosIA, fullText, 'ia');
+        hideStatusCnpj();
+        return;
+      }catch(err){
+        console.error(err);
+        showStatusCnpj('A IA não conseguiu processar: ' + err.message, 'error');
+        // segue abaixo e mostra pelo menos o resultado da leitura automática
+      }
+    }
+
+    renderResultsCnpj(dados, fullText, 'regex');
+    if (!aiAvailable()) hideStatusCnpj();
+  }catch(err){
+    console.error(err);
+    showStatusCnpj('Não consegui ler esse PDF. Confirme se o arquivo não está corrompido e tente de novo.', 'error');
+    resultsCnpjEl.innerHTML = '<div class="empty-state">Não foi possível processar o documento.</div>';
+  }
+}
+
+async function renderPageCnpj(num){
+  const page = await pdfDocCnpj.getPage(num);
+  const viewport = page.getViewport({ scale: 1.4 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  pdfViewerCnpj.innerHTML = '';
+  pdfViewerCnpj.appendChild(canvas);
+  pageInfoCnpj.textContent = `página ${num} / ${pdfDocCnpj.numPages}`;
+  prevBtnCnpj.disabled = num <= 1;
+  nextBtnCnpj.disabled = num >= pdfDocCnpj.numPages;
+}
+prevBtnCnpj.addEventListener('click', () => { if(currentPageCnpj>1){ currentPageCnpj--; renderPageCnpj(currentPageCnpj);} });
+nextBtnCnpj.addEventListener('click', () => { if(pdfDocCnpj && currentPageCnpj<pdfDocCnpj.numPages){ currentPageCnpj++; renderPageCnpj(currentPageCnpj);} });
+
+// O Cartão CNPJ é um formulário padronizado da Receita Federal: cada campo é um
+// RÓTULO em CAIXA ALTA seguido do VALOR. Como a posição exata (mesma linha, linha
+// seguinte, ou rótulos agrupados numa linha de tabela) pode variar dependendo de
+// como o PDF foi gerado, usamos duas camadas: 1) rótulo → valor na linha seguinte
+// (o caso mais comum), e 2) reforço por FORMATO (CNPJ, CEP e UF têm formatos bem
+// específicos) que corrige o campo mesmo se a camada 1 pegar errado ou nada.
+const CNPJ_LABELS = {
+  numeroInscricao: /^N[ÚU]MERO DE INSCRI[ÇC][ÃA]O$/i,
+  dataAbertura: /^DATA DE ABERTURA$/i,
+  nomeEmpresarial: /^NOME EMPRESARIAL$/i,
+  atividadePrincipal: /^C[ÓO]DIGO E DESCRI[ÇC][ÃA]O DA ATIVIDADE ECON[ÔO]MICA PRINCIPAL$/i,
+  logradouro: /^LOGRADOURO$/i,
+  numero: /^N[ÚU]MERO$/i, // "NÚMERO" sozinho — diferente de "NÚMERO DE INSCRIÇÃO"
+  complemento: /^COMPLEMENTO$/i,
+  cep: /^CEP$/i,
+  bairro: /^BAIRRO\/?DISTRITO$/i,
+  municipio: /^MUNIC[ÍI]PIO$/i,
+  uf: /^UF$/i
+};
+const UF_LIST = 'AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO';
+
+function valueAfterLabel(lines, labelRegex){
+  const idx = lines.findIndex(l => labelRegex.test(l.trim()));
+  if (idx === -1) return null;
+  for (let i = idx + 1; i < lines.length; i++){
+    const v = lines[i].trim();
+    if (!v) continue;
+    // se a linha seguinte também é rótulo de outro campo (tabela com colunas lado
+    // a lado), não é o valor deste campo — desistimos em vez de errar
+    const isAnotherLabel = Object.values(CNPJ_LABELS).some(re => re.test(v));
+    if (isAnotherLabel) return null;
+    return v;
+  }
+  return null;
+}
+
+function parseCNPJ(rawText){
+  const lines = rawText.replace(/\u00A0/g,' ').split('\n').map(l => l.replace(/[ \t]+/g,' ').trim()).filter(l => l.length);
+  const text = lines.join('\n');
+
+  let numeroInscricao = valueAfterLabel(lines, CNPJ_LABELS.numeroInscricao);
+  const dataAbertura = valueAfterLabel(lines, CNPJ_LABELS.dataAbertura);
+  const nomeEmpresarial = valueAfterLabel(lines, CNPJ_LABELS.nomeEmpresarial);
+  const atividadePrincipal = valueAfterLabel(lines, CNPJ_LABELS.atividadePrincipal);
+  const logradouro = valueAfterLabel(lines, CNPJ_LABELS.logradouro);
+  const numero = valueAfterLabel(lines, CNPJ_LABELS.numero);
+  let complemento = valueAfterLabel(lines, CNPJ_LABELS.complemento);
+  let cep = valueAfterLabel(lines, CNPJ_LABELS.cep);
+  const bairro = valueAfterLabel(lines, CNPJ_LABELS.bairro);
+  const municipio = valueAfterLabel(lines, CNPJ_LABELS.municipio);
+  let uf = valueAfterLabel(lines, CNPJ_LABELS.uf);
+
+  // Reforço por formato — cobre o caso de colunas lado a lado na tabela, onde o
+  // rótulo e o valor podem não ficar em linhas adjacentes simples.
+  if (!numeroInscricao || !/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(numeroInscricao)){
+    const m = text.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/);
+    if (m) numeroInscricao = m[1];
+  }
+  if (!cep || !/^\d{2}\.?\d{3}-\d{3}$/.test(cep)){
+    const m = text.match(/(\d{2}\.?\d{3}-\d{3})/);
+    if (m) cep = m[1];
+  }
+  if (!uf || !new RegExp('^(' + UF_LIST + ')$').test(uf)){
+    // pega a ÚLTIMA sigla de UF válida no texto (a do endereço, não alguma sigla
+    // que apareça por acaso antes, tipo em código de atividade)
+    const matches = [...text.matchAll(new RegExp('\\b(' + UF_LIST + ')\\b', 'g'))];
+    if (matches.length) uf = matches[matches.length - 1][1];
+  }
+
+  // "********" no complemento significa "sem complemento" no formulário da Receita — deixamos em branco
+  if (complemento && /^\*+$/.test(complemento)) complemento = '';
+
+  // CEP vem grafado como "08.022-000" — tira o ponto entre os dois primeiros dígitos
+  if (cep) cep = cep.replace(/^(\d{2})\.(\d{3})/, '$1$2');
+
+  return {
+    numeroInscricao, nomeEmpresarial, dataAbertura, atividadePrincipal,
+    logradouro, numero, complemento, cep, bairro, municipio, uf
+  };
+}
+
+function renderResultsCnpj(d, rawText, source){
+  lastCnpjData = d || lastCnpjData;
+  atualizarBotaoEnviarCadastro();
+  const campo = (label, valor) => `
+    <dt>${label}</dt>
+    <dd class="${valor ? '' : 'missing'}">${valor ? escapeHtml(valor) : 'não localizado'}</dd>
+  `;
+  // complemento pode ser propositalmente vazio (não é "não localizado")
+  const campoComplemento = `
+    <dt>Complemento</dt>
+    <dd class="${(d.complemento === null || d.complemento === undefined) ? 'missing' : ''}">${(d.complemento === null || d.complemento === undefined) ? 'não localizado' : (d.complemento || '<span style="color:#9AA3AC;">(sem complemento)</span>')}</dd>
+  `;
+
+  const banner = source === 'ia'
+    ? `<div class="ai-banner">
+         <p>Resultado gerado por IA (Gemini). Sempre confira contra o PDF antes de usar oficialmente.</p>
+         <button class="btn-ai btn-ai-ghost" id="tryRegexBtnCnpj">↺ Voltar pra leitura automática</button>
+       </div>`
+    : `<div class="ai-banner">
+         <p>${aiAvailable() ? 'Conferido tudo? Se algum campo ficou como "não localizado", a IA costuma pegar layouts de tabela diferentes.' : 'Leitura automática por padrão de texto do PDF.'}</p>
+         ${aiAvailable() ? `<button class="btn-ai" id="tryAiBtnCnpj">🤖 Tentar de novo com IA</button>` : ''}
+       </div>`;
+
+  const html = `
+    ${banner}
+    <div class="socio-card">
+      <h3>${escapeHtml(d.nomeEmpresarial || 'Empresa não identificada')}</h3>
+      <dl class="field-grid">
+        ${campo('Nº de inscrição', d.numeroInscricao)}
+        ${campo('Data de abertura', d.dataAbertura)}
+        ${campo('Atividade principal', d.atividadePrincipal)}
+        ${campo('Logradouro', d.logradouro)}
+        ${campo('Número', d.numero)}
+        ${campoComplemento}
+        ${campo('CEP', d.cep)}
+        ${campo('Bairro/Distrito', d.bairro)}
+        ${campo('Município', d.municipio)}
+        ${campo('UF', d.uf)}
+      </dl>
+    </div>
+    <div class="disclaimer">
+      ${source === 'ia' ? 'Extração via IA (Gemini)' : 'Extração automática por leitura de texto do PDF'} — sempre confira os dados contra o documento original antes de usar oficialmente.
+    </div>
+    ${rawTextBlock(rawText)}
+  `;
+  resultsCnpjEl.innerHTML = html;
+
+  const tryAiBtnCnpj = document.getElementById('tryAiBtnCnpj');
+  if (tryAiBtnCnpj){
+    tryAiBtnCnpj.addEventListener('click', async () => {
+      tryAiBtnCnpj.disabled = true;
+      tryAiBtnCnpj.textContent = '🤖 Lendo com IA…';
+      try{
+        const dadosIA = await extractCnpjWithAI(rawText);
+        renderResultsCnpj(dadosIA, rawText, 'ia');
+      }catch(err){
+        tryAiBtnCnpj.disabled = false;
+        tryAiBtnCnpj.textContent = '🤖 Tentar de novo com IA';
+        showStatusCnpj(err.message, 'error');
+      }
+    });
+  }
+  const tryRegexBtnCnpj = document.getElementById('tryRegexBtnCnpj');
+  if (tryRegexBtnCnpj){
+    tryRegexBtnCnpj.addEventListener('click', () => {
+      renderResultsCnpj(parseCNPJ(rawText), rawText, 'regex');
+    });
+  }
+}
+
+</script>
 </body>
 </html>
