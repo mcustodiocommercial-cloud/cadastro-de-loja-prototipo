@@ -108,7 +108,8 @@
 
   main.mode-preencher .sheet-wrap,
   main.mode-preencher #doc-tabs-wrap,
-  main.mode-preencher #zoom-controls{ display: none !important; }
+  main.mode-preencher #zoom-controls,
+  main.mode-preencher #btn-imprimir{ display: none !important; }
   main.mode-documentos .panel{ display: none !important; }
   #extrator-embed{ display: none; }
   main.mode-extrator > .panel,
@@ -145,13 +146,16 @@
     padding: 0;
   }
   fieldset legend{
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 700;
-    color: var(--navy);
-    padding: 0 0 8px;
-    border-bottom: 1px solid #EEF1F5;
+    color: #fff;
+    background: var(--navy);
+    padding: 8px 12px;
+    border-radius: 6px;
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
+    letter-spacing: .02em;
+    text-align: center;
   }
 
   label{
@@ -191,6 +195,25 @@
     background: #fff;
   }
   input[type=text].filled{ border-color: #9CC7A1; background: #F5FBF6; }
+
+  select{
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--ink);
+    background: #FBFCFD;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  select:focus{
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(59,125,130,.15);
+    background: #fff;
+  }
+  select.filled{ border-color: #9CC7A1; background: #F5FBF6; }
 
   textarea{
     width: 100%;
@@ -528,6 +551,18 @@
     border-color: #142A45;
   }
 
+  .brand-row{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-logo{
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
   .view-mode-tabs{
     display:flex;
     gap: 12px;
@@ -544,6 +579,8 @@
     font-weight: 800;
     cursor: pointer;
     transition: background .15s, border-color .15s;
+    flex: 1 1 0;
+    text-align: center;
   }
   .view-mode-tab:hover{ background: rgba(20,42,69,.18); }
   .view-mode-tab.active{
@@ -1294,16 +1331,14 @@
 
 <header class="top">
   <div class="wrap">
-    <h1>Cadastro de Lojas</h1>
-    <div class="steps">
-      <div class="step"><span class="num">1</span> Preencha os dados</div>
-      <div class="step"><span class="num">2</span> Vá em "Ver documentos"</div>
-      <div class="step"><span class="num">3</span> Escolha o formulário e clique em Salvar PDF</div>
+    <div class="brand-row">
+      <img src="logo.png" alt="Car Bank" class="header-logo">
+      <h1>Cadastro de Lojas</h1>
     </div>
     <div class="view-mode-tabs">
       <button type="button" class="view-mode-tab active" data-mode="preencher">📝 Preencher dados</button>
       <button type="button" class="view-mode-tab" data-mode="documentos">📄 Ver documentos</button>
-      <button type="button" class="view-mode-tab" data-mode="extrator">📥 Extrair Dados (PDF + IA)</button>
+      <button type="button" class="view-mode-tab" data-mode="extrator">📥 Extrair Dados</button>
     </div>
   </div>
 </header>
@@ -1438,14 +1473,197 @@
   </div>
 
   <section class="panel">
-    <h2>Dados para preenchimento</h2>
-    <p class="sub">Painel único: preencha aqui os dados da loja. Depois clique em "Ver documentos" no topo da página para conferir e imprimir o Termo de Compromisso ou a Ficha Cadastral PJ com esses dados já preenchidos.</p>
+    <h2 style="text-align:center; margin-bottom:24px;">Dados para preenchimento</h2>
+    <p class="sub" style="display:none;">Painel único: preencha aqui os dados da loja. Depois clique em "Ver documentos" no topo da página para conferir e imprimir o Termo de Compromisso ou a Ficha Cadastral PJ com esses dados já preenchidos.</p>
 
     <form id="form-dados" autocomplete="off">
       <fieldset>
+        <legend>Representante legal</legend>
+
+        <div class="field">
+          <label for="repr_nome">Nome completo</label>
+          <input type="text" id="repr_nome" data-target="repr_nome">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_email">E-mail</label>
+            <input type="text" id="repr_email" data-target="repr_email">
+          </div>
+          <div class="field">
+            <label for="repr_celular">Celular (DDD + nº)</label>
+            <input type="text" id="repr_celular" data-target="repr_celular" placeholder="(011) 99399-3171" inputmode="numeric">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_cpf">CPF</label>
+            <input type="text" id="repr_cpf" data-target="repr_cpf">
+          </div>
+          <div class="field">
+            <label for="repr_rg">RG</label>
+            <input type="text" id="repr_rg" data-target="repr_rg">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_orgao_expedidor">Órgão expedidor</label>
+            <input type="text" id="repr_orgao_expedidor" data-target="repr_orgao_expedidor">
+          </div>
+          <div class="field">
+            <label for="repr_data_nascimento">Data de nascimento</label>
+            <input type="text" id="repr_data_nascimento" data-target="repr_data_nascimento">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_nacionalidade">Nacionalidade</label>
+            <select id="repr_nacionalidade" data-target="repr_nacionalidade">
+              <option value=""></option>
+              <option value="Brasileira">Brasileira</option>
+              <option value="Estrangeira">Estrangeira</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="repr_naturalidade">Naturalidade</label>
+            <input type="text" id="repr_naturalidade" data-target="repr_naturalidade">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_sexo">Sexo</label>
+            <select id="repr_sexo" data-target="repr_sexo">
+              <option value=""></option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="repr_estado_civil">Estado civil</label>
+            <select id="repr_estado_civil" data-target="repr_estado_civil">
+              <option value=""></option>
+              <option value="Solteiro (a)">Solteiro (a)</option>
+              <option value="Casado (a)">Casado (a)</option>
+              <option value="Separado (a)">Separado (a)</option>
+              <option value="Divorciado (a)">Divorciado (a)</option>
+              <option value="Viúvo (a)">Viúvo (a)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="repr_filiacao_mae">Filiação (mãe)</label>
+          <input type="text" id="repr_filiacao_mae" data-target="repr_filiacao_mae">
+        </div>
+
+        <div class="field">
+          <label for="repr_endereco">Endereço residencial (rua/av.)</label>
+          <input type="text" id="repr_endereco" data-target="repr_endereco">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_numero">Nº</label>
+            <input type="text" id="repr_numero" data-target="repr_numero">
+          </div>
+          <div class="field">
+            <label for="repr_complemento">Complemento</label>
+            <input type="text" id="repr_complemento" data-target="repr_complemento">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_bairro">Bairro</label>
+            <input type="text" id="repr_bairro" data-target="repr_bairro">
+          </div>
+          <div class="field">
+            <label for="repr_cidade">Cidade</label>
+            <input type="text" id="repr_cidade" data-target="repr_cidade">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_estado">UF</label>
+            <input type="text" id="repr_estado" data-target="repr_estado">
+          </div>
+          <div class="field">
+            <label for="repr_cep">CEP</label>
+            <input type="text" id="repr_cep" data-target="repr_cep">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="repr_profissao">Profissão</label>
+            <input type="text" id="repr_profissao" data-target="repr_profissao">
+          </div>
+          <div class="field">
+            <label for="repr_renda_mensal">Renda mensal (R$)</label>
+            <input type="text" id="repr_renda_mensal" data-target="repr_renda_mensal" inputmode="numeric">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="repr_outras_rendas">Outras rendas (R$)</label>
+            <input type="text" id="repr_outras_rendas" data-target="repr_outras_rendas" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="repr_cpf_conjuge">CPF do cônjuge</label>
+            <input type="text" id="repr_cpf_conjuge" data-target="repr_cpf_conjuge">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Dados para o Input</legend>
+        <div class="row2">
+          <div class="field">
+            <label for="chapa_gcm">Chapa GCM/Gr</label>
+            <input type="text" id="chapa_gcm" data-target="chapa_gcm">
+          </div>
+          <div class="field">
+            <label for="inscricao_estadual">Inscrição Estadual</label>
+            <input type="text" id="inscricao_estadual" data-target="inscricao_estadual">
+          </div>
+        </div>
+        <div class="field">
+          <label for="cnae_gcm">CNAE</label>
+          <input type="text" id="cnae_gcm" data-target="cnae_gcm" readonly style="background:#F1F4F7; color:var(--muted);">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="nome_gcm">Nome Compl. GCM/GR</label>
+            <input type="text" id="nome_gcm" data-target="nome_gcm">
+          </div>
+          <div class="field">
+            <label for="email_gcm">E-Mail GCM/GR</label>
+            <input type="text" id="email_gcm" data-target="email_gcm">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="regional">Regional</label>
+            <select id="regional" data-target="regional">
+              <option value=""></option>
+              <option value="SP">SP</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="chapa_coordenador">Chapa Coordenador</label>
+            <input type="text" id="chapa_coordenador" data-target="chapa_coordenador">
+          </div>
+        </div>
+        <div class="field">
+          <label for="tipo_loja">Tipo Loja</label>
+          <select id="tipo_loja" data-target="tipo_loja">
+            <option value=""></option>
+            <option value="LOJISTA">LOJISTA</option>
+            <option value="CONCESSIONÁRIA">CONCESSIONÁRIA</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
         <legend>Dados do Concessionário/Lojista</legend>
 
-        <div class="paste-box">
+        <div class="paste-box" style="display:none;">
           <div class="paste-label">Colar Comprovante de CNPJ (Receita Federal)</div>
           <small>Copie o texto do comprovante de inscrição da Receita Federal e cole abaixo. Depois clique em "Puxar dados". Dica: a aba <a href="#" id="link-extrator">📥 Extrair Dados</a> faz isso automaticamente a partir do PDF (com IA), sem precisar copiar/colar.</small>
           <textarea id="colar_cnpj" placeholder="Cole aqui o texto do Comprovante de Inscrição e de Situação Cadastral..."></textarea>
@@ -1512,7 +1730,7 @@
         <div class="row2">
           <div class="field">
             <label for="telefone">Telefone (DDD + nº)</label>
-            <input type="text" id="telefone" data-target="telefone">
+            <input type="text" id="telefone" data-target="telefone" placeholder="(011) 99399-3171" inputmode="numeric">
           </div>
           <div class="field">
             <label for="email">E-mail</label>
@@ -1527,12 +1745,115 @@
           </div>
           <div class="field">
             <label for="forma_constituicao">Forma de constituição</label>
-            <input type="text" id="forma_constituicao" data-target="forma_constituicao">
+            <select id="forma_constituicao" data-target="forma_constituicao">
+              <option value=""></option>
+              <option value="Empresário Individual">Empresário Individual</option>
+              <option value="Sociedade Limitada (LTDA)">Sociedade Limitada (LTDA)</option>
+              <option value="Sociedade Anônima (S.A.)">Sociedade Anônima (S.A.)</option>
+              <option value="MEI (Microempreendedor Individual)">MEI (Microempreendedor Individual)</option>
+              <option value="EIRELI (Empresa Indiv. Respons. Limitada)">EIRELI (Empresa Indiv. Respons. Limitada)</option>
+            </select>
           </div>
         </div>
         <div class="field">
           <label for="faturamento_medio">Faturamento médio mensal (R$)</label>
-          <input type="text" id="faturamento_medio" data-target="faturamento_medio">
+          <input type="text" id="faturamento_medio" data-target="faturamento_medio" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label for="categoria">Categoria</label>
+          <select id="categoria" data-target="categoria">
+            <option value=""></option>
+            <option value="LEVES">LEVES</option>
+            <option value="LEVES E MOTOS">LEVES E MOTOS</option>
+            <option value="MOTOS">MOTOS</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Correspondente Bancário</legend>
+        <div class="row2">
+          <div class="field">
+            <label for="corresp_nome">Nome Corresp. Banc.</label>
+            <input type="text" id="corresp_nome" data-target="corresp_nome">
+          </div>
+          <div class="field">
+            <label for="corresp_cpf">CPF Corresp.</label>
+            <input type="text" id="corresp_cpf" data-target="corresp_cpf">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Conta Bancária</legend>
+        <p class="sub" style="margin-top:-6px;">Conta para recebimento da remuneração — usada no Anexo I do WL Contrato.</p>
+        <div class="field">
+          <label for="banco_nome">Nome do Banco</label>
+          <input type="text" id="banco_nome" data-target="banco_nome">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="banco_numero">Nº do Banco</label>
+            <input type="text" id="banco_numero" data-target="banco_numero">
+          </div>
+          <div class="field">
+            <label for="banco_agencia">Agência nº</label>
+            <input type="text" id="banco_agencia" data-target="banco_agencia">
+          </div>
+        </div>
+        <div class="field">
+          <label for="banco_conta">Conta Corrente nº</label>
+          <input type="text" id="banco_conta" data-target="banco_conta">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Informações da Loja</legend>
+        <div class="field">
+          <label for="predio_proprio">Prédio Próprio?</label>
+          <select id="predio_proprio" data-target="predio_proprio">
+            <option value=""></option>
+            <option value="SIM">SIM</option>
+            <option value="NÃO">NÃO</option>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="estoque_quant">Estoque (Quant.)</label>
+            <input type="text" id="estoque_quant" data-target="estoque_quant">
+          </div>
+          <div class="field">
+            <label for="valor_estoque">Valor Estoque</label>
+            <input type="text" id="valor_estoque" data-target="valor_estoque" inputmode="numeric">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="vendas_mes">Quat. Vendas/mês</label>
+            <input type="text" id="vendas_mes" data-target="vendas_mes">
+          </div>
+          <div class="field">
+            <label for="financ_mes">Quant. Financ./mês</label>
+            <input type="text" id="financ_mes" data-target="financ_mes">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="qtd_bancos_loja">Qtd. Bancos (Loja)</label>
+            <input type="text" id="qtd_bancos_loja" data-target="qtd_bancos_loja">
+          </div>
+          <div class="field">
+            <label for="patrim_socios">Patrim. Sócios</label>
+            <input type="text" id="patrim_socios" data-target="patrim_socios" inputmode="numeric">
+          </div>
+        </div>
+        <div class="field">
+          <label for="comentarios_gerais">Comentários gerais para defesa</label>
+          <textarea id="comentarios_gerais" data-target="comentarios_gerais" style="min-height:110px;"></textarea>
+          <button type="button" class="pull" id="btn-gerar-comentario" style="margin-top:8px;">📝 Gerar comentário automaticamente</button>
+        </div>
+        <div class="field">
+          <button type="button" class="primary" id="btn-de-acordo-coordenador" style="margin-top:8px;">📧 Email | De acordo - Coordenador</button>
         </div>
       </fieldset>
 
@@ -1628,128 +1949,7 @@
       </fieldset>
 
       <fieldset>
-        <legend>Representante legal</legend>
-        <p class="sub" style="margin-top:-6px;">Dados da pessoa física que representa a loja (usado em documentos futuros).</p>
-
-        <div class="field">
-          <label for="repr_nome">Nome completo</label>
-          <input type="text" id="repr_nome" data-target="repr_nome">
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_email">E-mail</label>
-            <input type="text" id="repr_email" data-target="repr_email">
-          </div>
-          <div class="field">
-            <label for="repr_celular">Celular (DDD + nº)</label>
-            <input type="text" id="repr_celular" data-target="repr_celular">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_cpf">CPF</label>
-            <input type="text" id="repr_cpf" data-target="repr_cpf">
-          </div>
-          <div class="field">
-            <label for="repr_rg">RG</label>
-            <input type="text" id="repr_rg" data-target="repr_rg">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_orgao_expedidor">Órgão expedidor</label>
-            <input type="text" id="repr_orgao_expedidor" data-target="repr_orgao_expedidor">
-          </div>
-          <div class="field">
-            <label for="repr_data_nascimento">Data de nascimento</label>
-            <input type="text" id="repr_data_nascimento" data-target="repr_data_nascimento">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_nacionalidade">Nacionalidade</label>
-            <input type="text" id="repr_nacionalidade" data-target="repr_nacionalidade">
-          </div>
-          <div class="field">
-            <label for="repr_naturalidade">Naturalidade</label>
-            <input type="text" id="repr_naturalidade" data-target="repr_naturalidade">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_sexo">Sexo</label>
-            <input type="text" id="repr_sexo" data-target="repr_sexo">
-          </div>
-          <div class="field">
-            <label for="repr_estado_civil">Estado civil</label>
-            <input type="text" id="repr_estado_civil" data-target="repr_estado_civil">
-          </div>
-        </div>
-        <div class="field">
-          <label for="repr_filiacao_mae">Filiação (mãe)</label>
-          <input type="text" id="repr_filiacao_mae" data-target="repr_filiacao_mae">
-        </div>
-
-        <div class="field">
-          <label for="repr_endereco">Endereço residencial (rua/av.)</label>
-          <input type="text" id="repr_endereco" data-target="repr_endereco">
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_numero">Nº</label>
-            <input type="text" id="repr_numero" data-target="repr_numero">
-          </div>
-          <div class="field">
-            <label for="repr_complemento">Complemento</label>
-            <input type="text" id="repr_complemento" data-target="repr_complemento">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_bairro">Bairro</label>
-            <input type="text" id="repr_bairro" data-target="repr_bairro">
-          </div>
-          <div class="field">
-            <label for="repr_cidade">Cidade</label>
-            <input type="text" id="repr_cidade" data-target="repr_cidade">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_estado">UF</label>
-            <input type="text" id="repr_estado" data-target="repr_estado">
-          </div>
-          <div class="field">
-            <label for="repr_cep">CEP</label>
-            <input type="text" id="repr_cep" data-target="repr_cep">
-          </div>
-        </div>
-
-        <div class="row2">
-          <div class="field">
-            <label for="repr_profissao">Profissão</label>
-            <input type="text" id="repr_profissao" data-target="repr_profissao">
-          </div>
-          <div class="field">
-            <label for="repr_renda_mensal">Renda mensal (R$)</label>
-            <input type="text" id="repr_renda_mensal" data-target="repr_renda_mensal">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="repr_outras_rendas">Outras rendas (R$)</label>
-            <input type="text" id="repr_outras_rendas" data-target="repr_outras_rendas">
-          </div>
-          <div class="field">
-            <label for="repr_cpf_conjuge">CPF do cônjuge</label>
-            <input type="text" id="repr_cpf_conjuge" data-target="repr_cpf_conjuge">
-          </div>
-        </div>
-      </fieldset>
-
-      <fieldset>
         <legend>Local e data (assinatura)</legend>
-        <p class="sub" style="margin-top:-6px;">Usado na assinatura do Termo de Compromisso e da Ficha Cadastral. A data é preenchida automaticamente; a cidade fica em branco até você informar.</p>
         <div class="row2">
           <div class="field">
             <label for="cidade">Cidade</label>
@@ -1758,12 +1958,11 @@
           <div class="field">
             <label for="data_assinatura">Data (por extenso)</label>
             <input type="text" id="data_assinatura" data-target="data_assinatura">
-            <small>Ex.: 25 de julho de 2026</small>
           </div>
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset style="display:none;">
         <legend>Programa Acelera</legend>
         <p class="sub" style="margin-top:-6px;">Usado no Termo de Anuência do Programa Acelera. Os demais dados (Razão Social, CNPJ, endereço, telefone) já são reaproveitados automaticamente.</p>
         <div class="field">
@@ -2263,7 +2462,10 @@
 <p class="sig-date"><span class="out" data-field="cidade" data-ph="[cidade]">[cidade]</span>, <span class="out" data-field="data_assinatura" data-ph="[data]">[data]</span></p>
 <div class="sig-bank-row">
   <div class="sig-bank-field">BANCO VOLKSWAGEN S.A.</div>
-  <div class="sig-bank-field">&nbsp;</div>
+  <div class="sig-bank-field">
+    <span class="out" data-field="corresp_nome" data-ph="&nbsp;">&nbsp;</span><br>
+    <span class="out" data-field="corresp_cpf" data-ph="&nbsp;">&nbsp;</span>
+  </div>
 </div>
 <p class="sig-witness-label">Testemunhas:</p>
 <div class="sig-grid">
@@ -2280,8 +2482,8 @@
 <div class="chkline"><span class="chk">&nbsp;</span>Outro: [indicar]</div>
 <p><b>2. REMUNERAÇÃO:</b></p>
 <p>2.1. Forma de pagamento:</p>
-<div class="chkline"><span class="chk">X</span>Crédito em conta corrente              de   titularidade   do    CORRESPONDENTE:        Banco        [   -   ],</div>
-<p>agência [ ], conta corrente nº [ ]</p>
+<div class="chkline"><span class="chk">X</span>Crédito em conta corrente de titularidade do CORRESPONDENTE: Banco [ <span class="out" data-field="banco_nome" data-ph="&nbsp;">&nbsp;</span> - <span class="out" data-field="banco_numero" data-ph="&nbsp;">&nbsp;</span> ],</div>
+<p>agência [ <span class="out" data-field="banco_agencia" data-ph="&nbsp;">&nbsp;</span> ], conta corrente nº [ <span class="out" data-field="banco_conta" data-ph="&nbsp;">&nbsp;</span> ]</p>
 <div class="chkline"><span class="chk">&nbsp;</span>Outro:</div>
 <p>2.2. Forma de Liberação de Recursos pelo CONTRATANTE ao CORRESPONDENTE:</p>
 <div class="chkline"><span class="chk">X</span>Nos termos previstos no Contrato</div>
@@ -2349,11 +2551,14 @@
   var FIELDS = ["cidade","razao_social","cnpj",
     "ramo_atividade","cnae","endereco_sede","numero_sede","complemento_sede","bairro_sede","cidade_sede","estado_sede","cep_sede",
     "telefone","email","endereco_corr","numero_corr","complemento_corr","bairro_corr","cidade_corr","estado_corr","cep_corr",
-    "data_constituicao","forma_constituicao","faturamento_medio","proposito_outros_texto","data_assinatura",
+    "data_constituicao","forma_constituicao","faturamento_medio","categoria","proposito_outros_texto","data_assinatura",
     "repr_nome","repr_email","repr_celular","repr_cpf","repr_rg","repr_orgao_expedidor","repr_data_nascimento",
     "repr_nacionalidade","repr_naturalidade","repr_sexo","repr_estado_civil","repr_filiacao_mae",
     "repr_endereco","repr_numero","repr_complemento","repr_bairro","repr_cidade","repr_estado","repr_cep",
-    "repr_profissao","repr_renda_mensal","repr_outras_rendas","repr_cpf_conjuge","numero_dn"];
+    "repr_profissao","repr_renda_mensal","repr_outras_rendas","repr_cpf_conjuge","numero_dn",
+    "corresp_nome","corresp_cpf","banco_nome","banco_numero","banco_agencia","banco_conta",
+    "chapa_gcm","inscricao_estadual","cnae_gcm","nome_gcm","email_gcm","regional","chapa_coordenador","tipo_loja",
+    "predio_proprio","estoque_quant","valor_estoque","vendas_mes","financ_mes","qtd_bancos_loja","patrim_socios","comentarios_gerais"];
   var STORAGE_KEY = "carta-dados-bancarios-vw-v1";
 
 
@@ -2548,10 +2753,67 @@
       renderFichaFormTabela("participacao");
       renderFichaTabelaSaida("acionistas");
       renderFichaTabelaSaida("participacao");
+
+      // Representante legal: usa o sócio com maior participação (maioria).
+      // Se houver mais de um sócio, vale conferir se é mesmo quem vai assinar.
+      var socioRepresentante = socios.reduce(function(maior, atual){
+        if(!maior) return atual;
+        var pctMaior = parseFloat(String(maior.percentual || "0").replace(",", ".").replace("%", "")) || 0;
+        var pctAtual = parseFloat(String(atual.percentual || "0").replace(",", ".").replace("%", "")) || 0;
+        return pctAtual > pctMaior ? atual : maior;
+      }, null);
+      if(socioRepresentante){
+        if(socioRepresentante.nome){ document.getElementById("repr_nome").value = socioRepresentante.nome; }
+        if(socioRepresentante.cpf){ document.getElementById("repr_cpf").value = socioRepresentante.cpf; }
+        if(socioRepresentante.rg){ document.getElementById("repr_rg").value = socioRepresentante.rg; }
+        if(socioRepresentante.endereco){
+          var end = parseEnderecoSocio(socioRepresentante.endereco);
+          document.getElementById("repr_endereco").value = end.rua || socioRepresentante.endereco;
+          if(end.numero){ document.getElementById("repr_numero").value = end.numero; }
+          if(end.bairro){ document.getElementById("repr_bairro").value = end.bairro; }
+          if(end.cidade){ document.getElementById("repr_cidade").value = end.cidade; }
+          if(end.estado){ document.getElementById("repr_estado").value = end.estado; }
+          if(end.cep){ document.getElementById("repr_cep").value = end.cep; }
+        }
+      }
     }
 
     render();
   }
+
+  // Separa uma string de endereço "corrida" (como vem do contrato social,
+  // ex: "Rua Igarapé Guara nº. 31, no Bairro de COHAB Inacio Monteiro,
+  // CEP: 08472-120, na Cidade de São Paulo, Estado de São Paulo") nas
+  // partes usadas pelos campos do Representante Legal. Qualquer parte que
+  // não for encontrada simplesmente fica em branco (o texto completo já
+  // fica preservado no campo "Endereço residencial" como reserva).
+  function parseEnderecoSocio(str){
+    var out = { rua: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" };
+    if(!str) return out;
+    var s = str;
+
+    var mCep = s.match(/CEP:?\s*(\d{2}\.?\d{3}-?\s?\d{3})/i);
+    if(mCep){ out.cep = mCep[1].replace(/\s/g, ""); }
+
+    var mCidade = s.match(/Cidade\s+de\s+([^,\.]+)/i);
+    if(mCidade){ out.cidade = mCidade[1].trim(); }
+
+    var mEstado = s.match(/Estado\s+de\s+([^,\.]+)/i);
+    if(mEstado){ out.estado = mEstado[1].trim(); }
+
+    var mBairro = s.match(/Bairro\s+(?:de\s+)?([^,]+?)(?:,|\s+CEP|$)/i);
+    if(mBairro){ out.bairro = mBairro[1].trim(); }
+
+    var mNumero = s.match(/n[ºo°]\.?\s*([\w\-\/]+)/i);
+    if(mNumero){ out.numero = mNumero[1].trim(); }
+
+    // Rua/logradouro: tudo antes do "nº", ou antes da primeira vírgula se não achar número.
+    var mRua = s.match(/^(.*?)(?:,?\s*n[ºo°]\.?\s*[\w\-\/]+|,)/i);
+    if(mRua && mRua[1].trim()){ out.rua = mRua[1].trim(); }
+
+    return out;
+  }
+
   // Exposta pro script do Extrator (embutido na mesma página) chamar direto.
   window.aplicarDadosDoExtrator = aplicarDadosDoExtrator;
 
@@ -2739,7 +3001,7 @@
 
       function addCell(width, texto){
         var cell = document.createElement("div");
-        cell.className = "fcell";
+        cell.className = "fcell val";
         cell.style.width = width + "%";
         cell.textContent = (texto && texto.trim()) ? texto : "\u00A0";
         frow.appendChild(cell);
@@ -2815,9 +3077,176 @@
         input.value = saved[f];
       }
       input.addEventListener("input", render);
+      if(input.tagName === "SELECT"){ input.addEventListener("change", render); }
     });
     document.getElementById("data_assinatura").addEventListener("input", render);
     document.getElementById("data_assinatura").value = dataDeHojeAssinatura();
+
+    // Máscara de telefone/celular: formata como (011) 99399-3171 enquanto o usuário digita.
+    (function(){
+      ["repr_celular","telefone"].forEach(function(id){
+        var el = document.getElementById(id);
+        el.addEventListener("input", function(){
+          var digitos = el.value.replace(/\D/g, "").slice(0, 12);
+          var formatado = digitos;
+          if(digitos.length > 0){
+            formatado = "(" + digitos.slice(0, 3);
+            if(digitos.length >= 3){ formatado += ") "; }
+            formatado += digitos.slice(3, 8);
+            if(digitos.length > 8){ formatado += "-" + digitos.slice(8, 12); }
+          }
+          el.value = formatado;
+          render();
+        });
+      });
+    })();
+
+    // CNAE (Dados para o Input): sempre reflete o campo "Atividade principal (CNAE)".
+    (function(){
+      var origem = document.getElementById("cnae");
+      var destino = document.getElementById("cnae_gcm");
+      function sincronizar(){
+        destino.value = origem.value.replace(/\D/g, "");
+        render();
+      }
+      origem.addEventListener("input", sincronizar);
+      sincronizar();
+    })();
+
+    // Gera o texto de "Comentários gerais para defesa" a partir dos dados já
+    // preenchidos no cadastro. Cada trecho só entra na frase se o campo
+    // correspondente estiver preenchido, pra não deixar lacunas estranhas.
+    document.getElementById("btn-gerar-comentario").addEventListener("click", function(){
+      function v(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+
+      var frases = [];
+
+      // Frase 1: constituição + localização
+      var abertura = "A loja " + (v("razao_social") ? v("razao_social") + " " : "");
+      var partesLocal = [];
+      if(v("data_constituicao")){ partesLocal.push("foi constituída em " + v("data_constituicao")); }
+      var endereco = [];
+      if(v("endereco_sede")){ endereco.push(v("endereco_sede") + (v("numero_sede") ? ", " + v("numero_sede") : "")); }
+      if(v("bairro_sede")){ endereco.push(v("bairro_sede")); }
+      if(v("cidade_sede")){ endereco.push(v("cidade_sede") + (v("estado_sede") ? "/" + v("estado_sede") : "")); }
+      if(endereco.length){ partesLocal.push("está localizada na região de " + endereco.join(", ")); }
+      if(partesLocal.length){ frases.push(abertura + partesLocal.join(" e ") + "."); }
+
+      // Frase 2: estoque, vendas e financiamentos
+      var partesOperacao = [];
+      if(v("estoque_quant")){
+        var estoqueTxt = "estoque de " + v("estoque_quant") + " veículo" + (v("estoque_quant") === "1" ? "" : "s");
+        if(v("valor_estoque")){ estoqueTxt += ", no valor de R$ " + v("valor_estoque"); }
+        partesOperacao.push("possui " + estoqueTxt);
+      } else if(v("valor_estoque")){
+        partesOperacao.push("possui estoque no valor de R$ " + v("valor_estoque"));
+      }
+      if(v("vendas_mes")){ partesOperacao.push("realiza em média " + v("vendas_mes") + " vendas por mês"); }
+      if(v("financ_mes")){ partesOperacao.push("financia cerca de " + v("financ_mes") + " operações por mês"); }
+      if(partesOperacao.length){
+        var f2 = partesOperacao.join(", ");
+        frases.push(f2.charAt(0).toUpperCase() + f2.slice(1) + ".");
+      }
+
+      // Frase 3: patrimônio dos sócios
+      if(v("patrim_socios")){
+        frases.push("Os sócios possuem patrimônio de R$ " + v("patrim_socios") + ".");
+      }
+
+      // Frase final: conclusão
+      frases.push("Diante dessas informações, sou favorável ao credenciamento.");
+
+      document.getElementById("comentarios_gerais").value = frases.join(" ");
+      render();
+    });
+
+    // Botão "De acordo - Coordenador": monta um e-mail (mailto) em texto puro,
+    // no mesmo padrão do modelo usado hoje. O destinatário fica em branco —
+    // é digitado direto no Outlook na hora de enviar.
+    document.getElementById("btn-de-acordo-coordenador").addEventListener("click", function(){
+      function v(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+
+      function tempoAtividade(dataStr){
+        var m = dataStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if(!m){ return ""; }
+        var d = new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+        if(isNaN(d.getTime())){ return ""; }
+        var hoje = new Date();
+        var anos = hoje.getFullYear() - d.getFullYear();
+        var meses = hoje.getMonth() - d.getMonth();
+        if(hoje.getDate() < d.getDate()){ meses--; }
+        if(meses < 0){ anos--; meses += 12; }
+        if(anos < 0){ anos = 0; meses = 0; }
+        var partes = [];
+        if(anos > 0){ partes.push(anos + (anos === 1 ? " ano" : " anos")); }
+        partes.push(meses + (meses === 1 ? " mês" : " meses"));
+        return partes.join(" e ");
+      }
+
+      var assunto = "Análise de viabilidade - " + v("razao_social") + " - CNPJ : " + v("cnpj");
+
+      var linhaCidade = v("cidade_sede") + (v("estado_sede") ? " - " + v("estado_sede") : "");
+      var linhaCorresp = [v("corresp_nome"), v("corresp_cpf") ? "CPF " + v("corresp_cpf") : ""].filter(Boolean).join(" ");
+
+      var corpo = [
+        "Prezados(as) ,",
+        "",
+        "Solicito o seu de acordo para prosseguir com o cadastro da loja:",
+        "",
+        "Motivo : Novo Cadastro",
+        "",
+        "",
+        "FORMULÁRIO PARA CREDENCIAMENTO DE NOVOS PONTOS DE VENDAS",
+        "Gerente Comercial Multicanais: " + v("nome_gcm"),
+        "",
+        "Nome da Loja: " + v("razao_social"),
+        "",
+        "CNPJ: " + v("cnpj"),
+        "",
+        "Cidade: " + linhaCidade,
+        "",
+        "1. Tempo de atividade da loja: " + tempoAtividade(v("data_constituicao")),
+        "",
+        "2. Prédio próprio (sim ou não): " + v("predio_proprio"),
+        "",
+        "3. Estoque da loja (quantidade): " + v("estoque_quant"),
+        "",
+        "   a. Valor do estoque próprio e consignado (incluir foto da fachada e estoque): " + v("valor_estoque"),
+        "",
+        "   b. Quantidade de vendas mês: " + v("vendas_mes"),
+        "",
+        "   c. Quantidade de financiamentos mês: " + v("financ_mes"),
+        "",
+        "4. Quantidade de Bancos que operam na loja: " + v("qtd_bancos_loja"),
+        "",
+        "5. Pessoa com Certificado de Correspondente no país e da LGPD (Nome e CPF): " + linhaCorresp,
+        "",
+        "6. Patrimônio dos Sócios: " + v("patrim_socios"),
+        "",
+        "7. Comentários gerais para defesa:",
+        v("comentarios_gerais")
+      ].join("\r\n");
+
+      var link = "mailto:?subject=" + encodeURIComponent(assunto) + "&body=" + encodeURIComponent(corpo);
+      window.location.href = link;
+    });
+
+    (function(){
+      function formatarMilhar(digitos){
+        return digitos.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+      ["repr_renda_mensal","repr_outras_rendas","faturamento_medio","valor_estoque","patrim_socios"].forEach(function(id){
+        var el = document.getElementById(id);
+        el.addEventListener("input", function(){
+          var digitos = el.value.split(",")[0].replace(/\D/g, "");
+          var formatado = digitos ? formatarMilhar(digitos) + ",00" : "";
+          el.value = formatado;
+          var pos = Math.max(formatado.length - 3, 0);
+          el.setSelectionRange(pos, pos);
+          render();
+        });
+      });
+    })();
 
     ["endereco_sede","numero_sede","complemento_sede","bairro_sede","cidade_sede","estado_sede","cep_sede",
      "endereco_corr","numero_corr","complemento_corr","bairro_corr","cidade_corr","estado_corr","cep_corr"].forEach(function(id){
