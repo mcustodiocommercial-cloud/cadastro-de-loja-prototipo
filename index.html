@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dados Bancários</title>
+<title>Cadastro de Loja</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -35,9 +35,10 @@
   }
 
   header.top{
-    background: #4ED88B;
+    background: #FFFFFF;
     color: #142A45;
     padding: 28px 24px 24px;
+    border-bottom: 1px solid #E4E8EE;
   }
   header.top .wrap{
     max-width: 1180px;
@@ -53,7 +54,7 @@
     opacity: .8;
   }
   header.top h1{
-    margin: 0 0 6px;
+    margin: 0;
     font-size: 26px;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -195,6 +196,8 @@
     background: #fff;
   }
   input[type=text].filled{ border-color: #9CC7A1; background: #F5FBF6; }
+  input[type=text].empty-required{ border-color: #E8B4B0; background: #FDF4F3; }
+  input[type=text].unfilled{ border-color: #E7B4AE; background: #FDF4F3; }
 
   select{
     width: 100%;
@@ -214,6 +217,8 @@
     background: #fff;
   }
   select.filled{ border-color: #9CC7A1; background: #F5FBF6; }
+  select.empty-required{ border-color: #E8B4B0; background: #FDF4F3; }
+  select.unfilled{ border-color: #E7B4AE; background: #FDF4F3; }
 
   textarea{
     width: 100%;
@@ -234,6 +239,9 @@
     box-shadow: 0 0 0 3px rgba(59,125,130,.15);
     background: #fff;
   }
+  textarea.filled{ border-color: #9CC7A1; background: #F5FBF6; }
+  textarea.empty-required{ border-color: #E8B4B0; background: #FDF4F3; }
+  textarea.unfilled{ border-color: #E7B4AE; background: #FDF4F3; }
 
   .paste-box{
     background: #F5F8FA;
@@ -572,9 +580,9 @@
     background: rgba(20,42,69,.10);
     border: 2px solid rgba(20,42,69,.4);
     color: #142A45;
-    padding: 13px 22px;
-    border-radius: 10px;
-    font-size: 14.5px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 800;
     cursor: pointer;
     transition: background .15s, border-color .15s;
@@ -586,6 +594,26 @@
     background: #142A45;
     color: #fff;
     border-color: #142A45;
+  }
+  .fill-progress-wrap{
+    margin-top: 16px;
+    height: 8px;
+    border-radius: 8px;
+    background: rgba(20,42,69,.15);
+    overflow: hidden;
+  }
+  .fill-progress-bar{
+    height: 100%;
+    width: 0%;
+    background: #2EBE73;
+    border-radius: 8px;
+    transition: width .25s ease;
+  }
+  .fill-progress-label{
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #142A45;
   }
 
   .hidden{ display: none !important; }
@@ -1006,44 +1034,46 @@
     color: var(--ink);
   }
 #extrator-embed .ext-header{
-    background: var(--navy-dark);
-    color: #fff;
-    padding: 22px 32px;
+    background: #fff;
+    color: #142A45;
+    padding: 18px 24px;
     display:flex;
     align-items:center;
     gap:14px;
-    border-bottom: 3px solid var(--gold);
+    border-bottom: 1px solid #E4E8EE;
   }
 #extrator-embed .ext-header .selo{
     width:36px; height:36px; border-radius:50%;
-    border:2px solid var(--gold);
+    border:2px solid #142A45;
     display:flex; align-items:center; justify-content:center;
-    font-weight:700; font-size:14px; color: var(--gold);
+    font-weight:700; font-size:14px; color: #142A45;
     flex-shrink:0;
   }
 #extrator-embed #apiKeyBtn{
-    background: rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.25);
-    color:#E7EDF2;
+    background: rgba(20,42,69,.06);
+    border:1px solid rgba(20,42,69,.3);
+    color:#142A45;
     font-size:12.5px;
     padding:7px 12px;
-    border-radius:20px;
+    border-radius:8px;
     cursor:pointer;
     flex-shrink:0;
     white-space:nowrap;
+    font-weight:700;
   }
-#extrator-embed #apiKeyBtn:hover{ background: rgba(255,255,255,.16); }
-#extrator-embed #apiKeyBtn.set{ border-color: var(--gold); color: var(--gold); }
+#extrator-embed #apiKeyBtn:hover{ background: rgba(20,42,69,.12); }
+#extrator-embed #apiKeyBtn.set{ border-color: #2EBE73; color: #1E8A50; }
 #extrator-embed .ext-header h1{
     font-size:18px;
     margin:0;
-    font-weight:600;
+    font-weight:700;
     letter-spacing:.2px;
+    color:#142A45;
   }
 #extrator-embed .ext-header p{
     margin:2px 0 0;
     font-size:12.5px;
-    color:#C7D2DC;
+    color:#64748B;
   }
 #extrator-embed #mainSocios, #extrator-embed #mainCnpj{
     max-width:1200px;
@@ -1339,6 +1369,8 @@
       <button type="button" class="view-mode-tab" data-mode="documentos">📄 Ver documentos</button>
       <button type="button" class="view-mode-tab" data-mode="extrator">📥 Extrair Dados</button>
     </div>
+    <div class="fill-progress-wrap"><div class="fill-progress-bar" id="fill-progress-bar"></div></div>
+    <div class="fill-progress-label" id="fill-progress-label">0% dos campos obrigatórios preenchidos</div>
   </div>
 </header>
 
@@ -1360,13 +1392,12 @@
 
 
 <div class="ext-header">
-  <div class="selo">JC</div>
   <div style="flex:1;">
     <h1>Extrator de Sócios — Contrato Social</h1>
     <p>Leitura automática de nome, endereço e participação societária a partir do PDF</p>
   </div>
-  <button id="enviarCadastroBtn" title="Enviar os dados extraídos para o sistema de Cadastro" style="background: rgba(184,145,43,.18); border:1px solid var(--gold); color:#F3E9CE; font-size:12.5px; padding:7px 12px; border-radius:20px; cursor:pointer; flex-shrink:0; white-space:nowrap; margin-right:10px; opacity:.5;" disabled>📤 Enviar para o Cadastro</button>
-  <button id="apiKeyBtn" title="Configurar chave da API Gemini (grátis)">🔑 Chave de API (grátis)</button>
+  <button id="enviarCadastroBtn" title="Enviar os dados extraídos para o sistema de Cadastro" style="background: rgba(20,42,69,.08); border:1px solid rgba(20,42,69,.3); color:#142A45; font-size:12.5px; font-weight:700; padding:7px 12px; border-radius:8px; cursor:pointer; flex-shrink:0; white-space:nowrap; margin-right:10px; opacity:.5;" disabled>📤 Enviar para o Cadastro</button>
+  <button id="apiKeyBtn" title="Configurar chave da API Gemini (grátis)" style="display:none;">🔑 Chave de API (grátis)</button>
 </div>
 
 <div class="modal-overlay" id="enviarCadastroModal">
@@ -1490,7 +1521,7 @@
           </div>
           <div class="field">
             <label for="repr_celular">Celular (DDD + nº)</label>
-            <input type="text" id="repr_celular" data-target="repr_celular" placeholder="(011) 99399-3171" inputmode="numeric">
+            <input type="text" id="repr_celular" data-target="repr_celular" inputmode="numeric">
           </div>
         </div>
         <div class="row2">
@@ -1624,7 +1655,7 @@
         </div>
         <div class="field">
           <label for="cnae_gcm">CNAE</label>
-          <input type="text" id="cnae_gcm" data-target="cnae_gcm" readonly style="background:#F1F4F7; color:var(--muted);">
+          <input type="text" id="cnae_gcm" data-target="cnae_gcm">
         </div>
         <div class="row2">
           <div class="field">
@@ -1729,7 +1760,7 @@
         <div class="row2">
           <div class="field">
             <label for="telefone">Telefone (DDD + nº)</label>
-            <input type="text" id="telefone" data-target="telefone" placeholder="(011) 99399-3171" inputmode="numeric">
+            <input type="text" id="telefone" data-target="telefone" inputmode="numeric">
           </div>
           <div class="field">
             <label for="email">E-mail</label>
@@ -1852,7 +1883,58 @@
           <button type="button" class="pull" id="btn-gerar-comentario" style="margin-top:8px;">📝 Gerar comentário automaticamente</button>
         </div>
         <div class="field">
-          <button type="button" class="primary" id="btn-de-acordo-coordenador" style="margin-top:8px;">📧 Email | De acordo - Coordenador</button>
+          <button type="button" id="btn-de-acordo-coordenador" style="margin-top:8px; background:rgba(20,42,69,.08); border:1px solid rgba(20,42,69,.3); color:#142A45; font-size:13px; font-weight:700; padding:9px 16px; border-radius:8px; cursor:pointer;">📧 Email | De acordo - Coordenador</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Administração da empresa e/ou procuradores</legend>
+        <p class="sub" style="margin-top:-6px;">Em "I/C", indique "I" (assina isoladamente) ou "C" (assina em conjunto).</p>
+        <div id="linhas-administracao"></div>
+        <button type="button" class="add-row-btn" data-tabela="administracao">+ Adicionar</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Principais acionistas</legend>
+        <div id="linhas-acionistas"></div>
+        <button type="button" class="add-row-btn" data-tabela="acionistas">+ Adicionar</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Participação em outras empresas</legend>
+        <p class="sub" style="margin-top:-6px;">Controladas/coligadas da empresa e/ou participação dos sócios/diretores em outras empresas.</p>
+        <div id="linhas-participacao"></div>
+        <button type="button" class="add-row-btn" data-tabela="participacao">+ Adicionar</button>
+      </fieldset>
+
+      <fieldset style="display:none;">
+        <legend>Declaração de propósitos</legend>
+        <div class="field">
+          <label>Propósito</label>
+          <label style="font-weight:400; display:flex; align-items:center; gap:6px; margin-bottom:8px;"><input type="radio" name="proposito_tipo" id="proposito_credito" value="credito" checked style="width:auto;"> Operações de Crédito / Arrendamento Mercantil</label>
+          <label style="font-weight:400; display:flex; align-items:center; gap:6px;"><input type="radio" name="proposito_tipo" id="proposito_outros" value="outros" style="width:auto;"> Outros</label>
+        </div>
+        <div class="field">
+          <label for="proposito_outros_texto">Se "Outros", especifique</label>
+          <input type="text" id="proposito_outros_texto" data-target="proposito_outros_texto">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Pessoas Exposta Politicamente - Circular 3.978/20 BACEN</legend>
+        <div class="field">
+          <label>Exerce ou exerceu nos últimos cinco anos algum cargo, emprego ou função pública relevante?</label>
+          <div class="row2">
+            <label style="font-weight:400; display:flex; align-items:center; gap:6px;"><input type="radio" name="pep_cargo" id="pep_cargo_sim" value="sim" style="width:auto;"> Sim</label>
+            <label style="font-weight:400; display:flex; align-items:center; gap:6px;"><input type="radio" name="pep_cargo" id="pep_cargo_nao" value="nao" checked style="width:auto;"> Não</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Possui relacionamento/ligação com Agente Público?</label>
+          <div class="row2">
+            <label style="font-weight:400; display:flex; align-items:center; gap:6px;"><input type="radio" name="pep_relacionamento" id="pep_relacionamento_sim" value="sim" style="width:auto;"> Sim</label>
+            <label style="font-weight:400; display:flex; align-items:center; gap:6px;"><input type="radio" name="pep_relacionamento" id="pep_relacionamento_nao" value="nao" checked style="width:auto;"> Não</label>
+          </div>
         </div>
       </fieldset>
 
@@ -1911,39 +1993,6 @@
             <label style="font-weight:400; display:flex; align-items:center; gap:6px;"><input type="radio" name="acordo_acionistas" id="acordo_sim" value="sim" style="width:auto;"> Sim</label>
             <label style="font-weight:400; display:flex; align-items:center; gap:6px;"><input type="radio" name="acordo_acionistas" id="acordo_nao" value="nao" checked style="width:auto;"> Não</label>
           </div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Administração da empresa e/ou procuradores</legend>
-        <p class="sub" style="margin-top:-6px;">Em "I/C", indique "I" (assina isoladamente) ou "C" (assina em conjunto).</p>
-        <div id="linhas-administracao"></div>
-        <button type="button" class="add-row-btn" data-tabela="administracao">+ Adicionar linha</button>
-      </fieldset>
-
-      <fieldset>
-        <legend>Principais acionistas</legend>
-        <div id="linhas-acionistas"></div>
-        <button type="button" class="add-row-btn" data-tabela="acionistas">+ Adicionar linha</button>
-      </fieldset>
-
-      <fieldset>
-        <legend>Participação em outras empresas</legend>
-        <p class="sub" style="margin-top:-6px;">Controladas/coligadas da empresa e/ou participação dos sócios/diretores em outras empresas.</p>
-        <div id="linhas-participacao"></div>
-        <button type="button" class="add-row-btn" data-tabela="participacao">+ Adicionar linha</button>
-      </fieldset>
-
-      <fieldset>
-        <legend>Declaração de propósitos</legend>
-        <div class="field">
-          <label>Propósito</label>
-          <label style="font-weight:400; display:flex; align-items:center; gap:6px; margin-bottom:8px;"><input type="radio" name="proposito_tipo" id="proposito_credito" value="credito" checked style="width:auto;"> Operações de Crédito / Arrendamento Mercantil</label>
-          <label style="font-weight:400; display:flex; align-items:center; gap:6px;"><input type="radio" name="proposito_tipo" id="proposito_outros" value="outros" style="width:auto;"> Outros</label>
-        </div>
-        <div class="field">
-          <label for="proposito_outros_texto">Se "Outros", especifique</label>
-          <input type="text" id="proposito_outros_texto" data-target="proposito_outros_texto">
         </div>
       </fieldset>
 
@@ -2558,6 +2607,9 @@
     "corresp_nome","corresp_cpf","banco_nome","banco_numero","banco_agencia","banco_conta",
     "chapa_gcm","inscricao_estadual","cnae_gcm","nome_gcm","email_gcm","regional","chapa_coordenador","tipo_loja",
     "predio_proprio","estoque_quant","valor_estoque","vendas_mes","financ_mes","qtd_bancos_loja","patrim_socios","comentarios_gerais"];
+  // Campos opcionais: ficam brancos/neutros quando vazios (sem o aviso vermelho).
+  // numero_dn está aqui porque o campo fica oculto (Programa Acelera desativado).
+  var NAO_OBRIGATORIOS = ["repr_complemento","complemento_sede","complemento_corr","repr_cpf_conjuge","repr_outras_rendas","numero_dn"];
   var STORAGE_KEY = "carta-dados-bancarios-vw-v1";
 
 
@@ -2604,7 +2656,14 @@
           out.classList.add("ph");
         }
       });
-      if(val){ input.classList.add("filled"); } else { input.classList.remove("filled"); }
+      if(val){
+        input.classList.add("filled");
+        input.classList.remove("empty-required");
+      } else {
+        input.classList.remove("filled");
+        if(NAO_OBRIGATORIOS.indexOf(f) === -1){ input.classList.add("empty-required"); }
+        else { input.classList.remove("empty-required"); }
+      }
     });
     save(data);
     updateStatus(data);
@@ -2620,6 +2679,14 @@
     } else {
       line.innerHTML = filled + " de " + FIELDS.length + " campos preenchidos.";
     }
+
+    var obrigatorios = FIELDS.filter(function(f){ return NAO_OBRIGATORIOS.indexOf(f) === -1; });
+    var obrigPreenchidos = obrigatorios.filter(function(f){ return data[f] && data[f].trim(); }).length;
+    var pct = obrigatorios.length ? Math.round((obrigPreenchidos / obrigatorios.length) * 100) : 0;
+    var bar = document.getElementById("fill-progress-bar");
+    var label = document.getElementById("fill-progress-label");
+    if(bar){ bar.style.width = pct + "%"; }
+    if(label){ label.textContent = pct + "% dos campos obrigatórios preenchidos"; }
   }
 
   function normalizeLabel(s){
@@ -2738,20 +2805,17 @@
 
     var socios = payload.socios || [];
     if(socios.length){
-      // Acionistas e Participação usam a mesma lista de sócios do contrato social
-      // (percentual de participação). Administração fica de fora — nem todo sócio
-      // é administrador, isso é melhor conferido manualmente.
+      // Acionistas usa a lista de sócios do contrato social (percentual de
+      // participação). Administração e Participação em outras empresas ficam
+      // de fora — nem todo sócio é administrador, e "participação em outras
+      // empresas" é um dado diferente (não vem do contrato social), melhor
+      // conferido/preenchido manualmente.
       fichaData.acionistas = socios.map(function(s){
         return { nome: s.nome || "", cpf: s.cpf || "", pct: s.percentual || "", ic: "" };
       });
-      fichaData.participacao = socios.map(function(s){
-        return { nome: s.nome || "", cpf: s.cpf || "", pct: s.percentual || "" };
-      });
       saveFichaData();
       renderFichaFormTabela("acionistas");
-      renderFichaFormTabela("participacao");
       renderFichaTabelaSaida("acionistas");
-      renderFichaTabelaSaida("participacao");
 
       // Representante legal: usa o sócio com maior participação (maioria).
       // Se houver mais de um sócio, vale conferir se é mesmo quem vai assinar.
@@ -2820,10 +2884,10 @@
   var FICHA_STORAGE_KEY = "carta-dados-bancarios-vw-ficha-v1";
 
   var fichaData = {
-    administracao: [{nome:"",cpf:"",ic:""},{nome:"",cpf:"",ic:""},{nome:"",cpf:"",ic:""}],
-    acionistas: [{nome:"",cpf:"",pct:"",ic:""},{nome:"",cpf:"",pct:"",ic:""},{nome:"",cpf:"",pct:"",ic:""}],
-    participacao: [{nome:"",cpf:"",pct:""},{nome:"",cpf:"",pct:""},{nome:"",cpf:"",pct:""}],
-    radios: { correspondencia: "sede", acordo: "nao", proposito: "credito" }
+    administracao: [{nome:"",cpf:"",ic:""}],
+    acionistas: [{nome:"",cpf:"",pct:"",ic:""}],
+    participacao: [{nome:"",cpf:"",pct:""}],
+    radios: { correspondencia: "sede", acordo: "nao", proposito: "credito", pep_cargo: "nao", pep_relacionamento: "nao" }
   };
 
   function loadFichaData(){
@@ -2835,6 +2899,24 @@
       if(parsed.acionistas && parsed.acionistas.length){ fichaData.acionistas = parsed.acionistas; }
       if(parsed.participacao && parsed.participacao.length){ fichaData.participacao = parsed.participacao; }
       if(parsed.radios){ fichaData.radios = parsed.radios; }
+
+      // Remove linhas em branco no final das tabelas que ficaram salvas de
+      // antes (sempre mantém pelo menos 1 linha em cada).
+      while(fichaData.administracao.length > 1){
+        var ultimaAdmin = fichaData.administracao[fichaData.administracao.length - 1];
+        if((ultimaAdmin.nome || "").trim() || (ultimaAdmin.cpf || "").trim() || (ultimaAdmin.ic || "").trim()){ break; }
+        fichaData.administracao.pop();
+      }
+      while(fichaData.acionistas.length > 1){
+        var ultimoAcionista = fichaData.acionistas[fichaData.acionistas.length - 1];
+        if((ultimoAcionista.nome || "").trim() || (ultimoAcionista.cpf || "").trim() || (ultimoAcionista.pct || "").trim() || (ultimoAcionista.ic || "").trim()){ break; }
+        fichaData.acionistas.pop();
+      }
+      while(fichaData.participacao.length > 1){
+        var ultimaParticip = fichaData.participacao[fichaData.participacao.length - 1];
+        if((ultimaParticip.nome || "").trim() || (ultimaParticip.cpf || "").trim() || (ultimaParticip.pct || "").trim()){ break; }
+        fichaData.participacao.pop();
+      }
     }catch(e){}
   }
 
@@ -2854,6 +2936,37 @@
     if(el){ el.textContent = marcado ? "X" : ""; }
   }
 
+  // Máscara de CPF/CNPJ: detecta sozinha se são 11 dígitos (CPF: 000.000.000-00)
+  // ou mais de 11 (CNPJ: 00.000.000/0000-00) enquanto o usuário digita.
+  function formatarCpfCnpj(valorAtual){
+    var d = valorAtual.replace(/\D/g, "").slice(0, 14);
+    if(d.length <= 11){
+      if(d.length > 9){ return d.slice(0,3)+"."+d.slice(3,6)+"."+d.slice(6,9)+"-"+d.slice(9); }
+      if(d.length > 6){ return d.slice(0,3)+"."+d.slice(3,6)+"."+d.slice(6); }
+      if(d.length > 3){ return d.slice(0,3)+"."+d.slice(3); }
+      return d;
+    }
+    var r = d.slice(0,2)+"."+d.slice(2,5)+"."+d.slice(5,8)+"/"+d.slice(8,12);
+    if(d.length > 12){ r += "-"+d.slice(12); }
+    return r;
+  }
+
+  // Marca o campo com a mesma cor verde usada nos campos principais quando
+  // preenchido; remove a marcação quando fica vazio.
+  function atualizarFilled(el, valor){
+    if((valor || "").toString().trim()){ el.classList.add("filled"); } else { el.classList.remove("filled"); }
+  }
+
+  // Formata "%" automaticamente ao digitar (ex.: 100 -> 100%), mantendo o
+  // cursor sempre antes do símbolo pra não travar a digitação contínua.
+  function aplicarMascaraPercentual(el){
+    var digitos = el.value.split("%")[0].replace(/\D/g, "");
+    var formatado = digitos ? digitos + "%" : "";
+    el.value = formatado;
+    var pos = Math.max(formatado.length - 1, 0);
+    el.setSelectionRange(pos, pos);
+  }
+
   function criarLinhaForm(tabela, index, row){
     var wrap = document.createElement("div");
     wrap.className = "ficha-row-item";
@@ -2868,8 +2981,10 @@
     var inputNome = document.createElement("input");
     inputNome.type = "text";
     inputNome.value = row.nome || "";
+    atualizarFilled(inputNome, inputNome.value);
     inputNome.addEventListener("input", function(){
       row.nome = inputNome.value;
+      atualizarFilled(inputNome, inputNome.value);
       saveFichaData();
       renderFichaTabelaSaida(tabela);
     });
@@ -2883,8 +2998,11 @@
     var inputCpf = document.createElement("input");
     inputCpf.type = "text";
     inputCpf.value = row.cpf || "";
+    atualizarFilled(inputCpf, inputCpf.value);
     inputCpf.addEventListener("input", function(){
+      inputCpf.value = formatarCpfCnpj(inputCpf.value);
       row.cpf = inputCpf.value;
+      atualizarFilled(inputCpf, inputCpf.value);
       saveFichaData();
       renderFichaTabelaSaida(tabela);
     });
@@ -2905,21 +3023,39 @@
       var inputPct = document.createElement("input");
       inputPct.type = "text";
       inputPct.value = row.pct || "";
+      atualizarFilled(inputPct, inputPct.value);
       inputPct.addEventListener("input", function(){
+        aplicarMascaraPercentual(inputPct);
         row.pct = inputPct.value;
+        atualizarFilled(inputPct, inputPct.value);
         saveFichaData();
         renderFichaTabelaSaida(tabela);
+      });
+      inputPct.addEventListener("blur", function(){
+        // Se a participação for menor que 50%, provavelmente há outro(s)
+        // sócio(s) — abre automaticamente uma linha nova pra completar,
+        // mas só se essa ainda for a última linha (evita duplicar).
+        var pct = parseFloat(String(row.pct || "").replace(",", ".").replace("%", ""));
+        var ehUltima = fichaData.acionistas[fichaData.acionistas.length - 1] === row;
+        if(!isNaN(pct) && pct > 0 && pct < 50 && ehUltima){
+          fichaData.acionistas.push({nome:"",cpf:"",pct:"",ic:""});
+          saveFichaData();
+          renderFichaFormTabela("acionistas");
+          renderFichaTabelaSaida("acionistas");
+        }
       });
       campoPct.appendChild(inputPct);
 
       var campoIc = document.createElement("div");
       campoIc.className = "field";
       campoIc.innerHTML = "<label>I/C</label>";
-      var inputIc = document.createElement("input");
-      inputIc.type = "text";
+      var inputIc = document.createElement("select");
+      inputIc.innerHTML = "<option value=\"\"></option><option value=\"I\">I</option><option value=\"C\">C</option>";
       inputIc.value = row.ic || "";
-      inputIc.addEventListener("input", function(){
+      atualizarFilled(inputIc, inputIc.value);
+      inputIc.addEventListener("change", function(){
         row.ic = inputIc.value;
+        atualizarFilled(inputIc, inputIc.value);
         saveFichaData();
         renderFichaTabelaSaida(tabela);
       });
@@ -2932,11 +3068,13 @@
       var campoIc2 = document.createElement("div");
       campoIc2.className = "field";
       campoIc2.innerHTML = "<label>I/C</label>";
-      var inputIc2 = document.createElement("input");
-      inputIc2.type = "text";
+      var inputIc2 = document.createElement("select");
+      inputIc2.innerHTML = "<option value=\"\"></option><option value=\"I\">I</option><option value=\"C\">C</option>";
       inputIc2.value = row.ic || "";
-      inputIc2.addEventListener("input", function(){
+      atualizarFilled(inputIc2, inputIc2.value);
+      inputIc2.addEventListener("change", function(){
         row.ic = inputIc2.value;
+        atualizarFilled(inputIc2, inputIc2.value);
         saveFichaData();
         renderFichaTabelaSaida(tabela);
       });
@@ -2949,8 +3087,11 @@
       var inputPct2 = document.createElement("input");
       inputPct2.type = "text";
       inputPct2.value = row.pct || "";
+      atualizarFilled(inputPct2, inputPct2.value);
       inputPct2.addEventListener("input", function(){
+        aplicarMascaraPercentual(inputPct2);
         row.pct = inputPct2.value;
+        atualizarFilled(inputPct2, inputPct2.value);
         saveFichaData();
         renderFichaTabelaSaida(tabela);
       });
@@ -3100,16 +3241,28 @@
       });
     })();
 
-    // CNAE (Dados para o Input): sempre reflete o campo "Atividade principal (CNAE)".
+    ["repr_cpf","repr_cpf_conjuge","corresp_cpf"].forEach(function(id){
+      var el = document.getElementById(id);
+      el.addEventListener("input", function(){
+        el.value = formatarCpfCnpj(el.value);
+        render();
+      });
+    });
+
+    // CNAE (Dados para o Input): puxa do campo "Atividade principal (CNAE)"
+    // como sugestão inicial, mas fica livre pra editar — se você digitar
+    // outro valor, não é sobrescrito de novo.
     (function(){
       var origem = document.getElementById("cnae");
       var destino = document.getElementById("cnae_gcm");
-      function sincronizar(){
+      function preencherUmaVez(){
+        if(destino.value.trim()){ return; } // já tem algo, não mexe
+        if(!origem.value.trim()){ return; }
         destino.value = origem.value.replace(/\D/g, "");
         render();
       }
-      origem.addEventListener("input", sincronizar);
-      sincronizar();
+      origem.addEventListener("input", preencherUmaVez);
+      preencherUmaVez();
     })();
 
     // Gera o texto de "Comentários gerais para defesa" a partir dos dados já
@@ -3258,10 +3411,16 @@
     document.getElementById("acordo_nao").checked = fichaData.radios.acordo !== "sim";
     document.getElementById("proposito_credito").checked = fichaData.radios.proposito !== "outros";
     document.getElementById("proposito_outros").checked = fichaData.radios.proposito === "outros";
+    document.getElementById("pep_cargo_sim").checked = fichaData.radios.pep_cargo === "sim";
+    document.getElementById("pep_cargo_nao").checked = fichaData.radios.pep_cargo !== "sim";
+    document.getElementById("pep_relacionamento_sim").checked = fichaData.radios.pep_relacionamento === "sim";
+    document.getElementById("pep_relacionamento_nao").checked = fichaData.radios.pep_relacionamento !== "sim";
 
     [["correspondencia_sede","correspondencia","sede"],["correspondencia_outro","correspondencia","outro"],
      ["acordo_sim","acordo","sim"],["acordo_nao","acordo","nao"],
-     ["proposito_credito","proposito","credito"],["proposito_outros","proposito","outros"]].forEach(function(cfg){
+     ["proposito_credito","proposito","credito"],["proposito_outros","proposito","outros"],
+     ["pep_cargo_sim","pep_cargo","sim"],["pep_cargo_nao","pep_cargo","nao"],
+     ["pep_relacionamento_sim","pep_relacionamento","sim"],["pep_relacionamento_nao","pep_relacionamento","nao"]].forEach(function(cfg){
       document.getElementById(cfg[0]).addEventListener("change", function(){
         fichaData.radios[cfg[1]] = cfg[2];
         saveFichaData();
@@ -3283,6 +3442,29 @@
 
     render();
     renderFichaExtras();
+
+    // Linha 1 de "Administração da empresa e/ou procuradores": puxa o Nome/CPF
+    // do Representante Legal como sugestão inicial, mas o campo continua
+    // editável — se você digitar outra pessoa, não é sobrescrito de novo.
+    (function(){
+      function preencherAdminComRepresentante(){
+        var linha1 = fichaData.administracao[0];
+        if(!linha1){ linha1 = fichaData.administracao[0] = {nome:"",cpf:"",ic:""}; }
+        if((linha1.nome || "").trim() || (linha1.cpf || "").trim()){ return; } // já tem algo, não mexe
+        var reprNome = document.getElementById("repr_nome").value;
+        var reprCpf = document.getElementById("repr_cpf").value;
+        if(!reprNome.trim() && !reprCpf.trim()){ return; }
+        linha1.nome = reprNome;
+        linha1.cpf = reprCpf;
+        saveFichaData();
+        renderFichaFormTabela("administracao");
+        renderFichaTabelaSaida("administracao");
+      }
+      document.getElementById("repr_nome").addEventListener("input", preencherAdminComRepresentante);
+      document.getElementById("repr_cpf").addEventListener("input", preencherAdminComRepresentante);
+      preencherAdminComRepresentante();
+    })();
+
     document.getElementById("link-extrator").addEventListener("click", function(e){
       e.preventDefault();
       setViewMode("extrator");
@@ -3311,10 +3493,12 @@
       document.getElementById("correspondencia_sede").checked = true;
       document.getElementById("acordo_nao").checked = true;
       document.getElementById("proposito_credito").checked = true;
-      fichaData.administracao = [{nome:"",cpf:"",ic:""},{nome:"",cpf:"",ic:""},{nome:"",cpf:"",ic:""}];
-      fichaData.acionistas = [{nome:"",cpf:"",pct:"",ic:""},{nome:"",cpf:"",pct:"",ic:""},{nome:"",cpf:"",pct:"",ic:""}];
-      fichaData.participacao = [{nome:"",cpf:"",pct:""},{nome:"",cpf:"",pct:""},{nome:"",cpf:"",pct:""}];
-      fichaData.radios = { correspondencia: "sede", acordo: "nao", proposito: "credito" };
+      document.getElementById("pep_cargo_nao").checked = true;
+      document.getElementById("pep_relacionamento_nao").checked = true;
+      fichaData.administracao = [{nome:"",cpf:"",ic:""}];
+      fichaData.acionistas = [{nome:"",cpf:"",pct:"",ic:""}];
+      fichaData.participacao = [{nome:"",cpf:"",pct:""}];
+      fichaData.radios = { correspondencia: "sede", acordo: "nao", proposito: "credito", pep_cargo: "nao", pep_relacionamento: "nao" };
       saveFichaData();
       render();
       renderFichaExtras();
@@ -3444,6 +3628,36 @@
     var savedZoom = null;
     try{ savedZoom = parseFloat(localStorage.getItem("preview-zoom")); }catch(e){}
     setZoom(savedZoom && !isNaN(savedZoom) ? savedZoom : 0.75);
+
+    // Ao apertar Enter num campo, pula direto pro próximo campo ainda vazio
+    // (pula os que já estão preenchidos). Não se aplica a caixas de texto
+    // grandes (textarea), pra não atrapalhar quem quer digitar várias linhas.
+    (function(){
+      function focarProximoVazio(indexAtual){
+        for(var passo = 1; passo <= FIELDS.length; passo++){
+          var idx = (indexAtual + passo) % FIELDS.length;
+          var el = document.getElementById(FIELDS[idx]);
+          if(!el){ continue; }
+          if(el.offsetParent === null){ continue; } // campo escondido, pula
+          if(!el.value || !el.value.trim()){
+            el.focus();
+            if(typeof el.select === "function"){ el.select(); }
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+          }
+        }
+      }
+      FIELDS.forEach(function(f, index){
+        var el = document.getElementById(f);
+        if(!el || el.tagName === "TEXTAREA"){ return; }
+        el.addEventListener("keydown", function(e){
+          if(e.key === "Enter"){
+            e.preventDefault();
+            focarProximoVazio(index);
+          }
+        });
+      });
+    })();
   }
 
   document.addEventListener("DOMContentLoaded", init);
