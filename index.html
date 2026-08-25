@@ -10,6 +10,7 @@
 <link rel="icon" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
   :root{
     --navy: #1E3A5F;
@@ -95,7 +96,7 @@
   main{
     max-width: 1180px;
     margin: 0 auto;
-    padding: 28px 24px 80px;
+    padding: 14px 24px 80px;
   }
 
   .toolbar-row{
@@ -110,8 +111,11 @@
   main.mode-preencher .sheet-wrap,
   main.mode-preencher #doc-tabs-wrap,
   main.mode-preencher #zoom-controls,
-  main.mode-preencher #btn-imprimir{ display: none !important; }
+  main.mode-preencher #btn-imprimir,
+  main.mode-preencher #btn-gerar-xlsx{ display: none !important; }
   main.mode-documentos .panel{ display: none !important; }
+  main.mode-documentos #btn-limpar,
+  main.mode-documentos #zoom-controls{ display: none !important; }
   #extrator-embed{ display: none; }
   main.mode-extrator > .panel,
   main.mode-extrator > .sheet-wrap,
@@ -538,8 +542,10 @@
   .doc-tabs{
     display:flex;
     gap: 10px;
-    margin-top: 20px;
+    margin-top: 0;
     flex-wrap: wrap;
+    flex: 1 1 auto;
+    align-items: center;
   }
   .doc-tab{
     background: rgba(20,42,69,.10);
@@ -551,6 +557,10 @@
     font-weight: 700;
     cursor: pointer;
     transition: background .15s, border-color .15s;
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    white-space: nowrap;
   }
   .doc-tab:hover{ background: rgba(20,42,69,.18); }
   .doc-tab.active{
@@ -1124,7 +1134,30 @@
     letter-spacing:.6px;
     color: var(--ink-soft);
     background:#FBFAF8;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
   }
+#extrator-embed .btn-enviar-cadastro{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background: #2EBE73;
+    border: 1px solid #24A263;
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: normal;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+#extrator-embed .btn-enviar-cadastro:hover{ background: #26A863; }
+#extrator-embed .btn-enviar-cadastro:disabled{ opacity:.45; cursor:default; }
 #extrator-embed #dropzone, #extrator-embed #dropzoneCnpj{
     margin:18px;
     border:2px dashed var(--line);
@@ -1197,6 +1230,37 @@
     color: var(--ink-soft);
   }
 #extrator-embed .empty-state svg{ width:40px;height:40px; margin-bottom:10px; opacity:.5; }
+#extrator-embed .ia-progress{
+    text-align:center;
+    padding: 44px 20px;
+  }
+#extrator-embed .ia-progress-pct{
+    font-size: 40px;
+    font-weight: 800;
+    color: #2EBE73;
+    line-height:1;
+    margin-bottom: 14px;
+  }
+#extrator-embed .ia-progress-track{
+    height: 8px;
+    max-width: 260px;
+    margin: 0 auto;
+    border-radius: 8px;
+    background: rgba(20,42,69,.12);
+    overflow: hidden;
+  }
+#extrator-embed .ia-progress-bar{
+    height: 100%;
+    width: 0%;
+    background: #2EBE73;
+    border-radius: 8px;
+    transition: width .3s ease;
+  }
+#extrator-embed .ia-progress-label{
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
 #extrator-embed .socio-card{
     background:#FDFCFA;
     border:1px solid var(--line);
@@ -1354,9 +1418,51 @@
   }
 #extrator-embed .modal-actions .save{ background: var(--navy); color:#fff; border-color: var(--navy); }
 #extrator-embed .modal-actions .clear{ color: var(--danger); border-color:#EAD0D0; }
+
+  /* Modal central de "todos os campos obrigatórios preenchidos" */
+  .status-modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(20,42,69,.55);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:60;
+    padding:20px;
+  }
+  .status-modal-overlay.show{ display:flex; }
+  .status-modal-box{
+    background:#fff;
+    border-radius:10px;
+    max-width:420px;
+    width:100%;
+    padding:28px 24px;
+    text-align:center;
+    box-shadow: 0 10px 40px rgba(20,42,69,.25);
+  }
+  .status-modal-box .status-modal-icon{ font-size:34px; margin-bottom:10px; }
+  .status-modal-box h2{ margin:0 0 8px; font-size:16px; color: var(--navy-dark); }
+  .status-modal-box p{ margin:0 0 20px; font-size:13px; color: var(--muted); line-height:1.5; }
+  .status-modal-box button{
+    padding:10px 22px;
+    border-radius:6px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    border:1px solid var(--navy);
+    background: var(--navy);
+    color:#fff;
+  }
 </style>
 </head>
 <body>
+
+<div class="status-modal-overlay" id="formCompletoModal">
+  <div class="status-modal-box">
+    <div class="status-modal-icon">✅</div>
+    <h2>Todos os campos obrigatórios foram preenchidos</h2>
+    <p>Agora vamos gerar os formulários para você conferir e imprimir.</p>
+    <button type="button" id="formCompletoBtn">📑 Gerar Formulários</button>
+  </div>
+</div>
 
 <header class="top">
   <div class="wrap">
@@ -1366,7 +1472,7 @@
     </div>
     <div class="view-mode-tabs">
       <button type="button" class="view-mode-tab active" data-mode="preencher">📝 Preencher dados</button>
-      <button type="button" class="view-mode-tab" data-mode="documentos">📄 Ver documentos</button>
+      <button type="button" class="view-mode-tab" data-mode="documentos">📑 Gerar Formulários</button>
       <button type="button" class="view-mode-tab" data-mode="extrator">📥 Extrair Dados</button>
     </div>
     <div class="fill-progress-wrap"><div class="fill-progress-bar" id="fill-progress-bar"></div></div>
@@ -1383,6 +1489,7 @@
       <button type="button" class="doc-tab" data-doc="wlcontrato">📃 WL Contrato</button>
     </div>
     <div class="actions" style="margin:0;">
+      <button type="button" class="secondary" id="btn-gerar-xlsx" style="background:#E9F7EF; border-color:#9CC7A1; color:#1E7A4C;">📊 Gerar Input.xlsx</button>
       <button type="button" class="primary" id="btn-imprimir">🖨️ Salvar PDF</button>
       <button type="button" class="secondary" id="btn-limpar">Limpar campos</button>
     </div>
@@ -1396,7 +1503,6 @@
     <h1>Extrator de Sócios — Contrato Social</h1>
     <p>Leitura automática de nome, endereço e participação societária a partir do PDF</p>
   </div>
-  <button id="enviarCadastroBtn" title="Enviar os dados extraídos para o sistema de Cadastro" style="background: rgba(20,42,69,.08); border:1px solid rgba(20,42,69,.3); color:#142A45; font-size:12.5px; font-weight:700; padding:7px 12px; border-radius:8px; cursor:pointer; flex-shrink:0; white-space:nowrap; margin-right:10px; opacity:.5;" disabled>📤 Enviar para o Cadastro</button>
   <button id="apiKeyBtn" title="Configurar chave da API Gemini (grátis)" style="display:none;">🔑 Chave de API (grátis)</button>
 </div>
 
@@ -1458,7 +1564,13 @@
   </section>
 
   <section class="panel">
-    <div class="panel-header">Sócios identificados</div>
+    <div class="panel-header">
+      <span>Sócios identificados</span>
+      <button type="button" class="btn-enviar-cadastro" id="enviarCadastroBtnSocios" title="Enviar os dados extraídos para o sistema de Cadastro" disabled>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="11" height="14" rx="1.5"/><line x1="5" y1="7" x2="10" y2="7"/><line x1="5" y1="10" x2="10" y2="10"/><line x1="5" y1="13" x2="8" y2="13"/><rect x="11" y="7" width="11" height="14" rx="1.5" fill="#fff"/><line x1="14" y1="11" x2="19" y2="11"/><line x1="14" y1="14" x2="19" y2="14"/><line x1="14" y1="17" x2="17" y2="17"/></svg>
+        Colar informações no Cadastro
+      </button>
+    </div>
     <div id="results">
       <div class="empty-state">
         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
@@ -1489,7 +1601,13 @@
   </section>
 
   <section class="panel">
-    <div class="panel-header">Dados do CNPJ</div>
+    <div class="panel-header">
+      <span>Dados do CNPJ</span>
+      <button type="button" class="btn-enviar-cadastro" id="enviarCadastroBtnCnpj" title="Enviar os dados extraídos para o sistema de Cadastro" disabled>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="11" height="14" rx="1.5"/><line x1="5" y1="7" x2="10" y2="7"/><line x1="5" y1="10" x2="10" y2="10"/><line x1="5" y1="13" x2="8" y2="13"/><rect x="11" y="7" width="11" height="14" rx="1.5" fill="#fff"/><line x1="14" y1="11" x2="19" y2="11"/><line x1="14" y1="14" x2="19" y2="14"/><line x1="14" y1="17" x2="17" y2="17"/></svg>
+        Colar informações no Cadastro
+      </button>
+    </div>
     <div id="resultsCnpj">
       <div class="empty-state">
         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
@@ -1504,7 +1622,7 @@
 
   <section class="panel">
     <h2 style="text-align:center; margin-bottom:24px;">Dados para preenchimento</h2>
-    <p class="sub" style="display:none;">Painel único: preencha aqui os dados da loja. Depois clique em "Ver documentos" no topo da página para conferir e imprimir o Termo de Compromisso ou a Ficha Cadastral PJ com esses dados já preenchidos.</p>
+    <p class="sub" style="display:none;">Painel único: preencha aqui os dados da loja. Depois clique em "Gerar Formulários" no topo da página para conferir e imprimir o Termo de Compromisso ou a Ficha Cadastral PJ com esses dados já preenchidos.</p>
 
     <form id="form-dados" autocomplete="off">
       <fieldset>
@@ -2607,10 +2725,32 @@
     "corresp_nome","corresp_cpf","banco_nome","banco_numero","banco_agencia","banco_conta",
     "chapa_gcm","inscricao_estadual","cnae_gcm","nome_gcm","email_gcm","regional","chapa_coordenador","tipo_loja",
     "predio_proprio","estoque_quant","valor_estoque","vendas_mes","financ_mes","qtd_bancos_loja","patrim_socios","comentarios_gerais"];
-  // Campos opcionais: ficam brancos/neutros quando vazios (sem o aviso vermelho).
-  // numero_dn está aqui porque o campo fica oculto (Programa Acelera desativado).
-  var NAO_OBRIGATORIOS = ["repr_complemento","complemento_sede","complemento_corr","repr_cpf_conjuge","repr_outras_rendas","numero_dn"];
+  // Campos opcionais: ficam brancos/neutros quando vazios (sem o aviso vermelho,
+  // e sem contar na barra de progresso/obrigatórios).
+  // numero_dn e proposito_outros_texto estão aqui porque ficam dentro de
+  // fieldsets totalmente ocultos (Programa Acelera e Declaração de propósitos
+  // desativados) — nunca aparecem pra serem preenchidos.
+  var NAO_OBRIGATORIOS = ["repr_complemento","complemento_sede","complemento_corr","repr_cpf_conjuge","repr_outras_rendas","numero_dn","proposito_outros_texto"];
+
+  // Campos do "Endereço para correspondência" só são obrigatórios quando o
+  // usuário marca "Outro endereço" — se for "A própria Sede", o grupo fica
+  // oculto e não faz sentido cobrar preenchimento dele.
+  var CAMPOS_CORRESPONDENCIA_OUTRO = ["endereco_corr","numero_corr","complemento_corr","bairro_corr","cidade_corr","estado_corr","cep_corr"];
+
+  function camposObrigatoriosAtivos(){
+    var corrOutroEl = document.getElementById("correspondencia_outro");
+    var corrOutro = corrOutroEl ? corrOutroEl.checked : false;
+    return FIELDS.filter(function(f){
+      if(NAO_OBRIGATORIOS.indexOf(f) !== -1){ return false; }
+      if(!corrOutro && CAMPOS_CORRESPONDENCIA_OUTRO.indexOf(f) !== -1){ return false; }
+      return true;
+    });
+  }
   var STORAGE_KEY = "carta-dados-bancarios-vw-v1";
+  // Evita reabrir o modal a cada tecla digitada enquanto o formulário já
+  // está 100% completo — só mostra de novo se ele cair abaixo de 100% e
+  // completar de novo depois.
+  var formCompletoModalMostrado = false;
 
 
   var MESES_MIN = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -2643,6 +2783,7 @@
 
   function render(){
     var data = currentData();
+    var obrigatoriosAtivos = camposObrigatoriosAtivos();
     FIELDS.forEach(function(f){
       var input = document.getElementById(f);
       var outs = document.querySelectorAll('.out[data-field="' + f + '"]');
@@ -2661,7 +2802,7 @@
         input.classList.remove("empty-required");
       } else {
         input.classList.remove("filled");
-        if(NAO_OBRIGATORIOS.indexOf(f) === -1){ input.classList.add("empty-required"); }
+        if(obrigatoriosAtivos.indexOf(f) !== -1){ input.classList.add("empty-required"); }
         else { input.classList.remove("empty-required"); }
       }
     });
@@ -2669,24 +2810,54 @@
     updateStatus(data);
   }
 
+  // Conta os campos I/C das tabelas de Administração e Acionistas — são
+  // obrigatórios, então entram tanto no total de campos preenchidos quanto
+  // no percentual de campos obrigatórios da barra de progresso.
+  function contarCamposIC(){
+    var total = 0, preenchidos = 0;
+    (fichaData.administracao || []).forEach(function(row){
+      total++;
+      if((row.ic || "").trim()){ preenchidos++; }
+    });
+    (fichaData.acionistas || []).forEach(function(row){
+      total++;
+      if((row.ic || "").trim()){ preenchidos++; }
+    });
+    return { total: total, preenchidos: preenchidos };
+  }
+
   function updateStatus(data){
-    var filled = FIELDS.filter(function(f){ return data[f] && data[f].trim(); }).length;
+    var ic = contarCamposIC();
+    var filled = FIELDS.filter(function(f){ return data[f] && data[f].trim(); }).length + ic.preenchidos;
+    var totalCampos = FIELDS.length + ic.total;
     var line = document.getElementById("status-line");
     if(filled === 0){
       line.innerHTML = "Os dados ficam salvos apenas neste navegador.";
-    } else if(filled === FIELDS.length){
+    } else if(filled === totalCampos){
       line.innerHTML = "<strong>Todos os campos preenchidos.</strong> Pronto para imprimir.";
     } else {
-      line.innerHTML = filled + " de " + FIELDS.length + " campos preenchidos.";
+      line.innerHTML = filled + " de " + totalCampos + " campos preenchidos.";
     }
 
-    var obrigatorios = FIELDS.filter(function(f){ return NAO_OBRIGATORIOS.indexOf(f) === -1; });
-    var obrigPreenchidos = obrigatorios.filter(function(f){ return data[f] && data[f].trim(); }).length;
-    var pct = obrigatorios.length ? Math.round((obrigPreenchidos / obrigatorios.length) * 100) : 0;
+    var obrigatorios = camposObrigatoriosAtivos();
+    var obrigPreenchidos = obrigatorios.filter(function(f){ return data[f] && data[f].trim(); }).length + ic.preenchidos;
+    var totalObrigatorios = obrigatorios.length + ic.total;
+    var pct = totalObrigatorios ? Math.round((obrigPreenchidos / totalObrigatorios) * 100) : 0;
     var bar = document.getElementById("fill-progress-bar");
     var label = document.getElementById("fill-progress-label");
     if(bar){ bar.style.width = pct + "%"; }
     if(label){ label.textContent = pct + "% dos campos obrigatórios preenchidos"; }
+
+    if(pct === 100 && totalObrigatorios > 0){
+      if(!formCompletoModalMostrado){
+        formCompletoModalMostrado = true;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        var modal = document.getElementById("formCompletoModal");
+        if(modal){ modal.classList.add("show"); }
+      }
+    } else {
+      formCompletoModalMostrado = false;
+    }
   }
 
   function normalizeLabel(s){
@@ -2798,6 +2969,7 @@
       if(m){
         document.getElementById("cnae").value = m[1].trim();
         document.getElementById("ramo_atividade").value = m[2].trim();
+        document.getElementById("cnae_gcm").value = m[1].replace(/\D/g, "");
       } else {
         document.getElementById("ramo_atividade").value = c.atividadePrincipal;
       }
@@ -2957,6 +3129,18 @@
     if((valor || "").toString().trim()){ el.classList.add("filled"); } else { el.classList.remove("filled"); }
   }
 
+  // Mesma coisa, mas pro campo I/C: como é obrigatório, quando fica vazio
+  // ganha o aviso vermelho igual aos outros campos obrigatórios do formulário.
+  function atualizarFilledIC(el, valor){
+    if((valor || "").toString().trim()){
+      el.classList.add("filled");
+      el.classList.remove("empty-required");
+    } else {
+      el.classList.remove("filled");
+      el.classList.add("empty-required");
+    }
+  }
+
   // Formata "%" automaticamente ao digitar (ex.: 100 -> 100%), mantendo o
   // cursor sempre antes do símbolo pra não travar a digitação contínua.
   function aplicarMascaraPercentual(el){
@@ -3042,6 +3226,7 @@
           saveFichaData();
           renderFichaFormTabela("acionistas");
           renderFichaTabelaSaida("acionistas");
+          updateStatus(currentData());
         }
       });
       campoPct.appendChild(inputPct);
@@ -3052,12 +3237,13 @@
       var inputIc = document.createElement("select");
       inputIc.innerHTML = "<option value=\"\"></option><option value=\"I\">I</option><option value=\"C\">C</option>";
       inputIc.value = row.ic || "";
-      atualizarFilled(inputIc, inputIc.value);
+      atualizarFilledIC(inputIc, inputIc.value);
       inputIc.addEventListener("change", function(){
         row.ic = inputIc.value;
-        atualizarFilled(inputIc, inputIc.value);
+        atualizarFilledIC(inputIc, inputIc.value);
         saveFichaData();
         renderFichaTabelaSaida(tabela);
+        updateStatus(currentData());
       });
       campoIc.appendChild(inputIc);
 
@@ -3071,12 +3257,13 @@
       var inputIc2 = document.createElement("select");
       inputIc2.innerHTML = "<option value=\"\"></option><option value=\"I\">I</option><option value=\"C\">C</option>";
       inputIc2.value = row.ic || "";
-      atualizarFilled(inputIc2, inputIc2.value);
+      atualizarFilledIC(inputIc2, inputIc2.value);
       inputIc2.addEventListener("change", function(){
         row.ic = inputIc2.value;
-        atualizarFilled(inputIc2, inputIc2.value);
+        atualizarFilledIC(inputIc2, inputIc2.value);
         saveFichaData();
         renderFichaTabelaSaida(tabela);
+        updateStatus(currentData());
       });
       campoIc2.appendChild(inputIc2);
       wrap.appendChild(campoIc2);
@@ -3109,6 +3296,7 @@
         saveFichaData();
         renderFichaFormTabela(tabela);
         renderFichaTabelaSaida(tabela);
+        updateStatus(currentData());
       });
       wrap.appendChild(btnRemover);
     }
@@ -3425,6 +3613,7 @@
         fichaData.radios[cfg[1]] = cfg[2];
         saveFichaData();
         renderFichaChecksAndAddress();
+        if(cfg[1] === "correspondencia"){ render(); }
       });
     });
 
@@ -3437,6 +3626,7 @@
         saveFichaData();
         renderFichaFormTabela(tabela);
         renderFichaTabelaSaida(tabela);
+        updateStatus(currentData());
       });
     });
 
@@ -3469,6 +3659,127 @@
       e.preventDefault();
       setViewMode("extrator");
     });
+
+    // ---------- Gerar Input.xlsx (mesmo layout/cores do modelo enviado) ----------
+    document.getElementById("btn-gerar-xlsx").addEventListener("click", function(){
+      gerarInputXlsx();
+    });
+
+    function v(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+    function soNumeros(str){ return (str || "").replace(/\D/g, ""); }
+
+    function separarTelefone(valor){
+      // "(011) 99399-3171" -> { ddd:"011", numero:"993993171" }
+      var m = (valor || "").match(/\((\d{2,3})\)\s*([\d-]+)/);
+      if(m){ return { ddd: m[1], numero: soNumeros(m[2]) }; }
+      var d = soNumeros(valor);
+      return { ddd: d.slice(0,3), numero: d.slice(3) };
+    }
+
+    function separarConta(valor){
+      // "98530-7" -> { conta:"98530", digito:"7" }
+      var partes = (valor || "").split("-");
+      return { conta: soNumeros(partes[0]), digito: partes[1] ? soNumeros(partes[1]) : "" };
+    }
+
+    async function gerarInputXlsx(){
+      var wb = new ExcelJS.Workbook();
+      var ws = wb.addWorksheet("Input");
+
+      var LARGURAS = [23.43,18.57,18.57,20.14,11.86,18.0,24.14,29.86,31.43,21.57,10.14,47.86,44.57,22.57,17.43,19.14,21.57,20.14,24.57,14.86,12.14,9.14,13.86,7.14,12.57,11.86,16.14,18.57,22.43,22.43,22.43];
+      LARGURAS.forEach(function(w, i){ ws.getColumn(i + 1).width = w; });
+
+      var CABECALHOS = [
+        "RESPONSÁVEL CADASTRO","CHAPA GCM/GR","CNPJ PARCEIROS WHITE LABEL","INSCRIÇÃO ESTADUAL","CNAE",
+        "COD_WHITE_LABEL","Empresa","NOME COMPLETO GCM / GR","E-MAIL GCM/GR","CNPJ","Regional",
+        "NOME EMPRESARIAL ( CARTÃO CNPJ ) MAX 40 CARACTER","E-MAIL DO DN INFORMADO NO FORMULÁRIO ATD",
+        "CÓDIGO DO BANCO DN ","AGÊNCIA DN","DIGITO AGÊNCIA DN","CONTA DN","DIGITO CONTA DN",
+        "NÚMERO DO ENDEREÇO DN","COMPLEMENTO","CEP DN","DDD 1","Telefone 1 DN ","DDD 2","Telefone 2 DN",
+        "STATUS","CPF DO CORRESPONDENTE","NOME DO CORRESPONDENTE","TIPO LOJA","CHAPA COORDENADOR","CATEGORIA DE VEICULO"
+      ];
+      var linha1 = ws.getRow(1);
+      linha1.height = 28.5;
+      CABECALHOS.forEach(function(texto, i){
+        var col = i + 1;
+        var cell = linha1.getCell(col);
+        cell.value = texto;
+        var corFundo = col === 1 ? "FFED7D31" : (col >= 29 ? "FF548235" : "FF4472C4");
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: corFundo } };
+        cell.font = { name: "Calibri", size: col === 1 ? 11 : 10, bold: true, color: { argb: "FFFFFFFF" } };
+        cell.alignment = { horizontal: "center", vertical: "center", wrapText: true };
+      });
+
+      var linha2 = ws.getRow(2);
+      linha2.height = 14.5;
+
+      var telefone = separarTelefone(v("repr_celular"));
+      var conta = separarConta(v("banco_conta"));
+
+      // Cada item: { col, valor, tipo: "numero"|"texto", destaque: true/false }
+      var DADOS = [
+        { col: 2, valor: v("chapa_gcm"), tipo: "numero" },
+        { col: 3, valor: soNumeros(v("cnpj")), tipo: "texto" },
+        { col: 4, valor: soNumeros(v("inscricao_estadual")), tipo: "texto" },
+        { col: 5, valor: soNumeros(v("cnae_gcm")), tipo: "numero", destaque: true },
+        { col: 7, valor: "LOJISTA WL", tipo: "texto" },
+        { col: 8, valor: v("nome_gcm"), tipo: "texto" },
+        { col: 9, valor: v("email_gcm"), tipo: "texto" },
+        { col: 10, valor: soNumeros(v("cnpj")), tipo: "texto" },
+        { col: 11, valor: v("regional"), tipo: "texto" },
+        { col: 12, valor: v("razao_social").slice(0, 40), tipo: "texto", destaque: true },
+        { col: 13, valor: v("repr_email"), tipo: "texto" },
+        { col: 14, valor: v("banco_numero"), tipo: "texto" },
+        { col: 15, valor: v("banco_agencia"), tipo: "numero" },
+        { col: 17, valor: conta.conta, tipo: "numero" },
+        { col: 18, valor: conta.digito, tipo: "numero" },
+        { col: 19, valor: v("numero_sede"), tipo: "numero" },
+        { col: 20, valor: v("complemento_sede"), tipo: "texto" },
+        { col: 21, valor: soNumeros(v("cep_sede")), tipo: "texto" },
+        { col: 22, valor: telefone.ddd, tipo: "texto" },
+        { col: 23, valor: telefone.numero, tipo: "numero" },
+        { col: 26, valor: "ATIVO", tipo: "texto" },
+        { col: 27, valor: soNumeros(v("corresp_cpf")), tipo: "numero" },
+        { col: 28, valor: v("corresp_nome"), tipo: "texto" },
+        { col: 29, valor: v("tipo_loja"), tipo: "texto" },
+        { col: 30, valor: v("chapa_coordenador"), tipo: "numero" },
+        { col: 31, valor: v("categoria"), tipo: "texto" }
+      ];
+
+      DADOS.forEach(function(item){
+        if(!item.valor){ return; }
+        var cell = linha2.getCell(item.col);
+        cell.value = item.tipo === "numero" && /^\d+$/.test(item.valor) ? Number(item.valor) : item.valor;
+        cell.numFmt = "0";
+        cell.alignment = { horizontal: "right" };
+        cell.font = item.destaque
+          ? { name: "Calibri", size: 11, bold: true, color: { argb: "FF333333" } }
+          : { name: "Calibri", size: 11 };
+      });
+
+      // Igual à planilha modelo: só as linhas 1 e 2 ficam visíveis, e as
+      // colunas visíveis vão até a AE (coluna 31) — o resto fica oculto.
+      // Importante: o ExcelJS só grava no arquivo linhas que tenham pelo menos
+      // uma célula "tocada" — uma linha só com "hidden = true" e nenhuma célula
+      // é descartada ao salvar, e a linha volta a aparecer normal no Excel.
+      // Por isso tocamos a célula A de cada linha antes de ocultar.
+      for (var rOcultar = 3; rOcultar <= 500; rOcultar++){
+        var linhaOcultar = ws.getRow(rOcultar);
+        linhaOcultar.getCell(1);
+        linhaOcultar.hidden = true;
+      }
+      for (var cOcultar = 32; cOcultar <= 80; cOcultar++){
+        ws.getColumn(cOcultar).hidden = true;
+      }
+
+      var buffer = await wb.xlsx.writeBuffer();
+      var blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      var link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "Input.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
     document.getElementById("btn-puxar").addEventListener("click", function(){
       var texto = document.getElementById("colar_cnpj").value;
@@ -3607,6 +3918,16 @@
     var modosValidos = ["preencher","documentos","extrator"];
     setViewMode(modosValidos.indexOf(savedMode) !== -1 ? savedMode : "preencher");
 
+    // ---- Modal de "todos os campos obrigatórios preenchidos" ----
+    var formCompletoModalEl = document.getElementById("formCompletoModal");
+    document.getElementById("formCompletoBtn").addEventListener("click", function(){
+      formCompletoModalEl.classList.remove("show");
+      setViewMode("documentos");
+    });
+    formCompletoModalEl.addEventListener("click", function(e){
+      if(e.target === formCompletoModalEl){ formCompletoModalEl.classList.remove("show"); }
+    });
+
     // ---- Zoom da pré-visualização ----
     function setZoom(z){
       sheetCompromissoEl.style.zoom = z;
@@ -3625,9 +3946,9 @@
       });
     });
 
-    var savedZoom = null;
-    try{ savedZoom = parseFloat(localStorage.getItem("preview-zoom")); }catch(e){}
-    setZoom(savedZoom && !isNaN(savedZoom) ? savedZoom : 0.75);
+    // Tamanho fixo em 75% (o seletor de tamanho está oculto na tela de
+    // documentos, então não faz sentido usar um valor salvo de antes).
+    setZoom(0.75);
 
     // Ao apertar Enter num campo, pula direto pro próximo campo ainda vazio
     // (pula os que já estão preenchidos). Não se aplica a caixas de texto
@@ -3706,7 +4027,7 @@ const WORKER_URL = 'https://winter-salad-78e6.mcustodio-commercial.workers.dev';
 let lastCnpjData = null;
 let lastSociosData = null;
 
-const enviarCadastroBtn = document.getElementById('enviarCadastroBtn');
+const enviarCadastroBtns = [document.getElementById('enviarCadastroBtnSocios'), document.getElementById('enviarCadastroBtnCnpj')];
 const enviarCadastroModal = document.getElementById('enviarCadastroModal');
 const enviarCadastroResumo = document.getElementById('enviarCadastroResumo');
 const enviarCadastroCancelBtn = document.getElementById('enviarCadastroCancelBtn');
@@ -3714,18 +4035,19 @@ const enviarCadastroConfirmBtn = document.getElementById('enviarCadastroConfirmB
 
 function atualizarBotaoEnviarCadastro(){
   const temDados = !!(lastCnpjData || (lastSociosData && lastSociosData.length));
-  enviarCadastroBtn.disabled = !temDados;
-  enviarCadastroBtn.style.opacity = temDados ? '1' : '.5';
+  enviarCadastroBtns.forEach(btn => { btn.disabled = !temDados; });
 }
 
-enviarCadastroBtn.addEventListener('click', () => {
-  const partes = [];
-  if (lastCnpjData && lastCnpjData.nomeEmpresarial) partes.push(`Empresa: <strong>${escapeHtml(lastCnpjData.nomeEmpresarial)}</strong>`);
-  if (lastSociosData && lastSociosData.length) partes.push(`${lastSociosData.length} sócio(s) identificado(s)`);
-  enviarCadastroResumo.innerHTML = partes.length
-    ? partes.join('<br>')
-    : 'Nenhum dado extraído ainda — envie um PDF nas abas ao lado antes de enviar.';
-  enviarCadastroModal.classList.add('show');
+enviarCadastroBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const partes = [];
+    if (lastCnpjData && lastCnpjData.nomeEmpresarial) partes.push(`Empresa: <strong>${escapeHtml(lastCnpjData.nomeEmpresarial)}</strong>`);
+    if (lastSociosData && lastSociosData.length) partes.push(`${lastSociosData.length} sócio(s) identificado(s)`);
+    enviarCadastroResumo.innerHTML = partes.length
+      ? partes.join('<br>')
+      : 'Nenhum dado extraído ainda — envie um PDF nas abas ao lado antes de enviar.';
+    enviarCadastroModal.classList.add('show');
+  });
 });
 enviarCadastroCancelBtn.addEventListener('click', () => enviarCadastroModal.classList.remove('show'));
 enviarCadastroModal.addEventListener('click', (e) => { if (e.target === enviarCadastroModal) enviarCadastroModal.classList.remove('show'); });
@@ -3812,6 +4134,31 @@ fileInput.addEventListener('change', e => {
   if (e.target.files.length) handleFile(e.target.files[0]);
 });
 
+// Barra de progresso "falsa": a API do Gemini responde tudo de uma vez (não dá
+// pra saber o andamento real), então o percentual sobe sozinho, rápido no
+// início e mais devagar perto de 90% — e só chega em 100% quando a resposta
+// realmente chega (chamando .finalizar()).
+function criarProgressoIA(container, label){
+  container.innerHTML =
+    '<div class="ia-progress">' +
+      '<div class="ia-progress-pct">0%</div>' +
+      '<div class="ia-progress-track"><div class="ia-progress-bar"></div></div>' +
+      '<div class="ia-progress-label">' + label + '</div>' +
+    '</div>';
+  const pctEl = container.querySelector('.ia-progress-pct');
+  const barEl = container.querySelector('.ia-progress-bar');
+  let pct = 0;
+  const timer = setInterval(() => {
+    const incremento = pct < 50 ? (Math.random() * 6 + 3) : pct < 80 ? (Math.random() * 3 + 1) : (Math.random() * 0.6 + 0.2);
+    pct = Math.min(pct + incremento, 90);
+    pctEl.textContent = Math.round(pct) + '%';
+    barEl.style.width = pct + '%';
+  }, 300);
+  return {
+    finalizar(){ clearInterval(timer); }
+  };
+}
+
 function showStatus(msg, type){
   statusEl.textContent = msg;
   statusEl.className = 'show ' + (type || 'info');
@@ -3847,13 +4194,15 @@ async function handleFile(file){
       // Se já existe uma chave salva, deixamos a IA como fonte principal — ela lida
       // muito melhor com a variação de formato entre contratos do que o regex.
       showStatus(socios.length ? 'Conferindo com IA…' : 'Leitura automática não encontrou os sócios — tentando com IA…', 'info');
-      resultsEl.innerHTML = '<div class="empty-state">🤖 Lendo com IA…</div>';
+      const progresso = criarProgressoIA(resultsEl, 'Processando com IA…');
       try{
         const socioIA = await extractWithAI(fullText);
+        progresso.finalizar();
         renderResults(socioIA, fullText, 'ia');
         hideStatus();
         return;
       }catch(err){
+        progresso.finalizar();
         console.error(err);
         showStatus('A IA não conseguiu processar: ' + err.message, 'error');
         // segue abaixo e mostra pelo menos o resultado (mesmo vazio) da leitura automática
@@ -4376,13 +4725,15 @@ async function handleFileCnpj(file){
       // tabela diferentes do que o regex, que assume rótulo e valor em linhas
       // adjacentes (nem todo PDF do Cartão CNPJ organiza o texto assim).
       showStatusCnpj('Conferindo com IA…', 'info');
-      resultsCnpjEl.innerHTML = '<div class="empty-state">🤖 Lendo com IA…</div>';
+      const progressoCnpj = criarProgressoIA(resultsCnpjEl, 'Processando com IA…');
       try{
         const dadosIA = await extractCnpjWithAI(fullText);
+        progressoCnpj.finalizar();
         renderResultsCnpj(dadosIA, fullText, 'ia');
         hideStatusCnpj();
         return;
       }catch(err){
+        progressoCnpj.finalizar();
         console.error(err);
         showStatusCnpj('A IA não conseguiu processar: ' + err.message, 'error');
         // segue abaixo e mostra pelo menos o resultado da leitura automática
