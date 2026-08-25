@@ -108,17 +108,25 @@
     margin-bottom: 18px;
   }
 
+  .pdf-row{
+    display: flex;
+    justify-content: center;
+    margin: 0 0 18px;
+  }
+
   main.mode-preencher .sheet-wrap,
   main.mode-preencher #doc-tabs-wrap,
   main.mode-preencher #zoom-controls,
   main.mode-preencher #btn-imprimir,
-  main.mode-preencher #btn-gerar-xlsx{ display: none !important; }
+  main.mode-preencher #btn-gerar-xlsx,
+  main.mode-preencher .pdf-row{ display: none !important; }
   main.mode-documentos .panel{ display: none !important; }
   main.mode-documentos #btn-limpar,
   main.mode-documentos #zoom-controls{ display: none !important; }
   #extrator-embed{ display: none; }
   main.mode-extrator > .panel,
   main.mode-extrator > .sheet-wrap,
+  main.mode-extrator > .pdf-row,
   main.mode-extrator > .toolbar-row{ display: none !important; }
   main.mode-extrator #extrator-embed{ display: block; }
 
@@ -309,6 +317,7 @@
   }
   button.primary:hover{ background: var(--navy-dark); }
   button.primary:active{ transform: translateY(1px); }
+  #btn-imprimir:hover{ background: #17603C; }
 
   button.secondary{
     background: none;
@@ -549,7 +558,7 @@
   }
   .doc-tab{
     background: rgba(20,42,69,.10);
-    border: 1px solid rgba(20,42,69,.35);
+    border: 1px solid #9CC7A1;
     color: #142A45;
     padding: 9px 16px;
     border-radius: 999px;
@@ -988,6 +997,7 @@
     main{ display: block; padding: 0; margin: 0; max-width: none; }
     .panel{ display: none; }
     .toolbar-row{ display: none !important; }
+    .pdf-row{ display: none !important; }
     .preview-toolbar{ display: none !important; }
     .sheet-wrap{ overflow: visible; padding: 0; }
     .sheet{
@@ -1277,9 +1287,9 @@
     gap:10px;
   }
 #extrator-embed .badge-pct{
-    background: var(--gold-soft);
-    color: #7A5E14;
-    border:1px solid #E4D19C;
+    background: var(--navy);
+    color: #FFFFFF;
+    border:1px solid var(--navy);
     font-size:12px;
     font-weight:700;
     padding:3px 9px;
@@ -1488,9 +1498,8 @@
       <button type="button" class="doc-tab" data-doc="acelera">🚀 Termo Acelera</button>
       <button type="button" class="doc-tab" data-doc="wlcontrato">📃 WL Contrato</button>
     </div>
-    <div class="actions" style="margin:0;">
+    <div class="actions" style="margin:0; flex-direction:row; flex-wrap:wrap; align-items:center;">
       <button type="button" class="secondary" id="btn-gerar-xlsx" style="background:#E9F7EF; border-color:#9CC7A1; color:#1E7A4C;">📊 Gerar Input.xlsx</button>
-      <button type="button" class="primary" id="btn-imprimir">🖨️ Salvar PDF</button>
       <button type="button" class="secondary" id="btn-limpar">Limpar campos</button>
     </div>
   </div>
@@ -2140,6 +2149,10 @@
       <div class="status-line" id="status-line">Os dados ficam salvos apenas neste navegador.</div>
     </form>
   </section>
+
+  <div class="pdf-row" id="pdf-row-wrap">
+    <button type="button" class="primary" id="btn-imprimir" style="background:var(--ok);">🖨️ Salvar PDF</button>
+  </div>
 
   <section class="sheet-wrap">
     <div class="preview-toolbar">
@@ -3683,50 +3696,35 @@
     }
 
     async function gerarInputXlsx(){
+      // Carrega o arquivo-modelo real (template-input.xlsx, com toda a
+      // formatação/cores/linhas e colunas ocultas já prontas) e só injeta os
+      // dados do cadastro na linha 2 — não recriamos formatação nenhuma na mão,
+      // então é impossível "esquecer" um detalhe do modelo.
+      var resp = await fetch("template-input.xlsx");
+      if(!resp.ok){
+        alert("Não encontrei o arquivo \"template-input.xlsx\" ao lado do index.html. Suba esse arquivo no mesmo repositório do GitHub Pages.");
+        return;
+      }
+      var arrayBuffer = await resp.arrayBuffer();
       var wb = new ExcelJS.Workbook();
-      var ws = wb.addWorksheet("Input");
-
-      var LARGURAS = [23.43,18.57,18.57,20.14,11.86,18.0,24.14,29.86,31.43,21.57,10.14,47.86,44.57,22.57,17.43,19.14,21.57,20.14,24.57,14.86,12.14,9.14,13.86,7.14,12.57,11.86,16.14,18.57,22.43,22.43,22.43];
-      LARGURAS.forEach(function(w, i){ ws.getColumn(i + 1).width = w; });
-
-      var CABECALHOS = [
-        "RESPONSÁVEL CADASTRO","CHAPA GCM/GR","CNPJ PARCEIROS WHITE LABEL","INSCRIÇÃO ESTADUAL","CNAE",
-        "COD_WHITE_LABEL","Empresa","NOME COMPLETO GCM / GR","E-MAIL GCM/GR","CNPJ","Regional",
-        "NOME EMPRESARIAL ( CARTÃO CNPJ ) MAX 40 CARACTER","E-MAIL DO DN INFORMADO NO FORMULÁRIO ATD",
-        "CÓDIGO DO BANCO DN ","AGÊNCIA DN","DIGITO AGÊNCIA DN","CONTA DN","DIGITO CONTA DN",
-        "NÚMERO DO ENDEREÇO DN","COMPLEMENTO","CEP DN","DDD 1","Telefone 1 DN ","DDD 2","Telefone 2 DN",
-        "STATUS","CPF DO CORRESPONDENTE","NOME DO CORRESPONDENTE","TIPO LOJA","CHAPA COORDENADOR","CATEGORIA DE VEICULO"
-      ];
-      var linha1 = ws.getRow(1);
-      linha1.height = 28.5;
-      CABECALHOS.forEach(function(texto, i){
-        var col = i + 1;
-        var cell = linha1.getCell(col);
-        cell.value = texto;
-        var corFundo = col === 1 ? "FFED7D31" : (col >= 29 ? "FF548235" : "FF4472C4");
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: corFundo } };
-        cell.font = { name: "Calibri", size: col === 1 ? 11 : 10, bold: true, color: { argb: "FFFFFFFF" } };
-        cell.alignment = { horizontal: "center", vertical: "center", wrapText: true };
-      });
-
-      var linha2 = ws.getRow(2);
-      linha2.height = 14.5;
+      await wb.xlsx.load(arrayBuffer);
+      var ws = wb.getWorksheet("Input");
 
       var telefone = separarTelefone(v("repr_celular"));
       var conta = separarConta(v("banco_conta"));
 
-      // Cada item: { col, valor, tipo: "numero"|"texto", destaque: true/false }
+      // Cada item: { col, valor, tipo: "numero"|"texto" }
       var DADOS = [
         { col: 2, valor: v("chapa_gcm"), tipo: "numero" },
         { col: 3, valor: soNumeros(v("cnpj")), tipo: "texto" },
         { col: 4, valor: soNumeros(v("inscricao_estadual")), tipo: "texto" },
-        { col: 5, valor: soNumeros(v("cnae_gcm")), tipo: "numero", destaque: true },
+        { col: 5, valor: soNumeros(v("cnae_gcm")), tipo: "numero" },
         { col: 7, valor: "LOJISTA WL", tipo: "texto" },
         { col: 8, valor: v("nome_gcm"), tipo: "texto" },
         { col: 9, valor: v("email_gcm"), tipo: "texto" },
         { col: 10, valor: soNumeros(v("cnpj")), tipo: "texto" },
         { col: 11, valor: v("regional"), tipo: "texto" },
-        { col: 12, valor: v("razao_social").slice(0, 40), tipo: "texto", destaque: true },
+        { col: 12, valor: v("razao_social").slice(0, 40), tipo: "texto" },
         { col: 13, valor: v("repr_email"), tipo: "texto" },
         { col: 14, valor: v("banco_numero"), tipo: "texto" },
         { col: 15, valor: v("banco_agencia"), tipo: "numero" },
@@ -3745,30 +3743,23 @@
         { col: 31, valor: v("categoria"), tipo: "texto" }
       ];
 
+      // Só o valor muda — a formatação (cor, alinhamento, negrito das colunas
+      // de destaque etc.) já vem pronta do estilo da própria célula/linha 2
+      // no arquivo-modelo, então não mexemos em cell.font/numFmt/alignment aqui.
       DADOS.forEach(function(item){
         if(!item.valor){ return; }
-        var cell = linha2.getCell(item.col);
+        var cell = ws.getCell(2, item.col);
         cell.value = item.tipo === "numero" && /^\d+$/.test(item.valor) ? Number(item.valor) : item.valor;
-        cell.numFmt = "0";
-        cell.alignment = { horizontal: "right" };
-        cell.font = item.destaque
-          ? { name: "Calibri", size: 11, bold: true, color: { argb: "FF333333" } }
-          : { name: "Calibri", size: 11 };
       });
 
-      // Igual à planilha modelo: só as linhas 1 e 2 ficam visíveis, e as
-      // colunas visíveis vão até a AE (coluna 31) — o resto fica oculto.
-      // Importante: o ExcelJS só grava no arquivo linhas que tenham pelo menos
-      // uma célula "tocada" — uma linha só com "hidden = true" e nenhuma célula
-      // é descartada ao salvar, e a linha volta a aparecer normal no Excel.
-      // Por isso tocamos a célula A de cada linha antes de ocultar.
-      for (var rOcultar = 3; rOcultar <= 500; rOcultar++){
+      // O ExcelJS não preserva a propriedade "zeroHeight" da planilha original
+      // (que ocultava automaticamente qualquer linha não declarada) — ela se
+      // perde ao regravar o arquivo. Por isso garantimos de novo manualmente
+      // pra faixa além da linha 26, que já vem oculta no modelo.
+      for (var rOcultar = 27; rOcultar <= 2000; rOcultar++){
         var linhaOcultar = ws.getRow(rOcultar);
         linhaOcultar.getCell(1);
         linhaOcultar.hidden = true;
-      }
-      for (var cOcultar = 32; cOcultar <= 80; cOcultar++){
-        ws.getColumn(cOcultar).hidden = true;
       }
 
       var buffer = await wb.xlsx.writeBuffer();
@@ -4713,7 +4704,7 @@ function renderResults(socios, rawText, source){
          <button class="btn-ai" id="tryAiBtn">🤖 ${socios.length ? 'Tentar de novo com IA' : 'Tentar com IA'}</button>
        </div>`
     : `<div class="ai-banner">
-         <p>Resultado gerado por IA (Gemini). Sempre confira contra o PDF antes de usar oficialmente.</p>
+         <p>Resultado gerado por IA. Sempre confira contra o PDF antes de usar oficialmente.</p>
          <button class="btn-ai btn-ai-ghost" id="tryRegexBtn">↺ Voltar pra leitura automática</button>
        </div>`;
 
@@ -4754,7 +4745,7 @@ function renderResults(socios, rawText, source){
 
   html += `
     <div class="disclaimer">
-      ${source === 'regex' ? 'Extração automática por leitura de texto do PDF' : 'Extração via IA (Gemini)'} — sempre confira os dados contra o documento original antes de usar oficialmente.
+      ${source === 'regex' ? 'Extração automática por leitura de texto do PDF' : 'Extração via IA'} — sempre confira os dados contra o documento original antes de usar oficialmente.
     </div>
   `;
   html += rawTextBlock(rawText);
@@ -5002,7 +4993,7 @@ function renderResultsCnpj(d, rawText, source){
 
   const banner = source === 'ia'
     ? `<div class="ai-banner">
-         <p>Resultado gerado por IA (Gemini). Sempre confira contra o PDF antes de usar oficialmente.</p>
+         <p>Resultado gerado por IA. Sempre confira contra o PDF antes de usar oficialmente.</p>
          <button class="btn-ai btn-ai-ghost" id="tryRegexBtnCnpj">↺ Voltar pra leitura automática</button>
        </div>`
     : `<div class="ai-banner">
@@ -5028,7 +5019,7 @@ function renderResultsCnpj(d, rawText, source){
       </dl>
     </div>
     <div class="disclaimer">
-      ${source === 'ia' ? 'Extração via IA (Gemini)' : 'Extração automática por leitura de texto do PDF'} — sempre confira os dados contra o documento original antes de usar oficialmente.
+      ${source === 'ia' ? 'Extração via IA' : 'Extração automática por leitura de texto do PDF'} — sempre confira os dados contra o documento original antes de usar oficialmente.
     </div>
     ${rawTextBlock(rawText)}
   `;
