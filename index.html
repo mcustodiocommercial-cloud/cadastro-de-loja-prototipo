@@ -4342,9 +4342,15 @@ async function extractFullText(doc){
 // Como a Groq não suporta um "responseSchema" estruturado feito o Gemini,
 // descrevemos o formato esperado dentro do próprio texto de instrução.
 async function callGroqFallback(instructions, textToUse, schema){
+  // O plano gratuito da Groq tem um limite bem mais apertado que o do Gemini
+  // (8.000 tokens por minuto no total, entrada + saída) — por isso cortamos
+  // bem mais o texto aqui do que os 60.000 caracteres usados pro Gemini.
+  // ~12.000 caracteres ≈ 3.000 tokens, deixando espaço de sobra pra instrução
+  // e pra reserva de resposta (2048 tokens) sem estourar o limite.
+  const GROQ_MAX_CHARS = 12000;
   const parts = [{
     text: instructions
-      + `\n\nTexto do documento:\n"""\n${textToUse.slice(0, 60000)}\n"""`
+      + `\n\nTexto do documento:\n"""\n${textToUse.slice(0, GROQ_MAX_CHARS)}\n"""`
       + `\n\nResponda em JSON válido seguindo EXATAMENTE esta estrutura (schema): ${JSON.stringify(schema)}`
   }];
 
