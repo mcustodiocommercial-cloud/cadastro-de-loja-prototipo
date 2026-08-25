@@ -1529,6 +1529,10 @@
       (entra com sua conta Google, clica em "Create API key", copia e cola aqui).
       A chave fica salva só no seu navegador (nunca é enviada pra nenhum lugar além do Google).
     </p>
+    <p style="font-size:12px;color:var(--muted);">
+      Se o Gemini estiver indisponível (alta demanda, limite atingido etc.), o site tenta automaticamente
+      com a <strong>Groq</strong> como reforço — não precisa configurar nada aqui pra isso.
+    </p>
     <input type="password" id="apiKeyInput" placeholder="Cole sua chave aqui (começa com AIza...)">
     <div class="modal-actions">
       <button class="clear" id="apiKeyClearBtn">Remover chave</button>
@@ -4079,7 +4083,16 @@ const DEFAULT_GEMINI_API_KEY = ''; // <- cole sua chave aqui dentro das aspas (o
 const GEMINI_KEY_STORAGE = 'extrator_socios_gemini_key';
 
 function getApiKey(){ return localStorage.getItem(GEMINI_KEY_STORAGE) || DEFAULT_GEMINI_API_KEY || ''; }
-function aiAvailable(){ return !!WORKER_URL || !!getApiKey(); }
+
+// Chave da Groq — usada como FALLBACK quando o Gemini falhar por completo
+// (sobrecarga, limite gratuito, modelo indisponível etc). Mesma lógica de
+// armazenamento da chave do Gemini: dá pra sobrescrever pelo modal "🔑 Chave
+// de API" salvando em localStorage, sem precisar editar o arquivo de novo.
+const DEFAULT_GROQ_API_KEY = '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';
+const GROQ_KEY_STORAGE = 'extrator_socios_groq_key';
+function getGroqApiKey(){ return localStorage.getItem(GROQ_KEY_STORAGE) || DEFAULT_GROQ_API_KEY || ''; }
+
+function aiAvailable(){ return !!WORKER_URL || !!getApiKey() || !!getGroqApiKey(); }
 function setApiKeyUiState(){
   apiKeyBtn.classList.toggle('set', aiAvailable());
   if (WORKER_URL) apiKeyBtn.title = 'IA já configurada pelo proxy da equipe — clique só se quiser usar uma chave pessoal';
@@ -4399,6 +4412,96 @@ async function callGeminiJSON(instructions, fullText, schema, docRef){
   }
 }
 
+// ---------- Extração via Groq (fallback gratuito quando o Gemini falha) ----------
+// A Groq não aceita um "responseSchema" estruturado como o Gemini — em vez
+// disso, pedimos JSON pelo modo json_object e descrevemos o formato esperado
+// no próprio texto do prompt (schemaTexto). Também não processamos imagem
+// aqui (PDF escaneado): a Groq entra só como reforço de TEXTO.
+const GROQ_MODEL_CANDIDATES = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+
+async function callGroqJSON(instructions, fullText, schemaTexto){
+  const apiKey = getGroqApiKey();
+  if (!apiKey) throw new Error('Chave da Groq não configurada.');
+
+  const prompt = instructions +
+    `\n\nResponda ESTRITAMENTE em JSON válido, sem nenhum texto antes ou depois, seguindo exatamente esta estrutura de chaves (use null nos campos não encontrados, nunca invente valor):\n${schemaTexto}` +
+    `\n\nTexto do documento:\n"""\n${fullText.slice(0, 60000)}\n"""`;
+
+  let resp, lastErrBody = '';
+  for (const model of GROQ_MODEL_CANDIDATES){
+    resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+        temperature: 0
+      })
+    });
+    if (resp.ok || (resp.status !== 400 && resp.status !== 404)) break; // só troca de modelo se ele não existir/não aceitar o pedido
+    lastErrBody = await resp.text().catch(() => '');
+  }
+
+  if (!resp.ok){
+    const errBody = lastErrBody || await resp.text().catch(() => '');
+    if (resp.status === 401 || resp.status === 403){
+      throw new Error('Chave da Groq inválida ou expirada. Detalhe: ' + errBody.slice(0,200));
+    }
+    if (resp.status === 429){
+      throw new Error('Limite gratuito da Groq atingido no momento.');
+    }
+    throw new Error(`Erro ${resp.status} na API da Groq. ` + errBody.slice(0,200));
+  }
+
+  const data = await resp.json();
+  const textOut = data.choices?.[0]?.message?.content || '';
+  try{
+    return JSON.parse(textOut);
+  }catch(e){
+    throw new Error('A Groq respondeu em um formato inesperado: ' + textOut.slice(0,150));
+  }
+}
+
+// ---------- Orquestrador: tenta Gemini, e se falhar de vez cai pra Groq ----------
+// docRef só é usado pelo Gemini (suporte a imagem em PDF escaneado); a Groq
+// entra apenas como reforço de texto.
+async function callAiJSON(instructions, fullText, schema, docRef, schemaTextoGroq){
+  const hasGemini = !!WORKER_URL || !!getApiKey();
+  const hasGroq = !!getGroqApiKey();
+
+  if (!hasGemini && !hasGroq){
+    apiKeyModal.classList.add('show');
+    throw new Error('Configure uma chave de API primeiro (Gemini ou Groq) — ou peça pro administrador configurar o Worker do time (veja worker.js).');
+  }
+
+  let geminiErr = null;
+  if (hasGemini){
+    try{
+      return await callGeminiJSON(instructions, fullText, schema, docRef);
+    }catch(err){
+      geminiErr = err;
+      console.error('Gemini falhou, tentando Groq como fallback:', err);
+    }
+  }
+
+  if (hasGroq){
+    try{
+      return await callGroqJSON(instructions, fullText, schemaTextoGroq);
+    }catch(groqErr){
+      if (geminiErr){
+        throw new Error('Gemini indisponível (' + geminiErr.message + ') e a Groq também falhou: ' + groqErr.message);
+      }
+      throw groqErr;
+    }
+  }
+
+  throw geminiErr;
+}
+
 async function extractWithAI(fullText){
   const schema = {
     type: 'object',
@@ -4432,7 +4535,13 @@ Para cada sócio, extraia (deixe null quando a informação não existir, não i
 - quotas: número de quotas que ele detém
 - percentual: percentual de participação na sociedade (ex: "50%")`;
 
-  const parsed = await callGeminiJSON(instructions, fullText, schema, typeof pdfDoc !== 'undefined' ? pdfDoc : null);
+  const schemaTextoGroq = `{
+  "socios": [
+    { "nome": "string", "endereco": "string ou null", "cpf": "string ou null", "rg": "string ou null", "quotas": "string ou null", "percentual": "string ou null" }
+  ]
+}`;
+
+  const parsed = await callAiJSON(instructions, fullText, schema, typeof pdfDoc !== 'undefined' ? pdfDoc : null, schemaTextoGroq);
   return (parsed.socios || []).filter(s => s.nome);
 }
 
@@ -4467,7 +4576,21 @@ async function extractCnpjWithAI(fullText){
 - municipio: município
 - uf: sigla do estado (2 letras)`;
 
-  return callGeminiJSON(instructions, fullText, schema, typeof pdfDocCnpj !== 'undefined' ? pdfDocCnpj : null);
+  const schemaTextoGroq = `{
+  "numeroInscricao": "string ou null",
+  "nomeEmpresarial": "string ou null",
+  "dataAbertura": "string ou null",
+  "atividadePrincipal": "string ou null",
+  "logradouro": "string ou null",
+  "numero": "string ou null",
+  "complemento": "string ou null",
+  "cep": "string ou null",
+  "bairro": "string ou null",
+  "municipio": "string ou null",
+  "uf": "string ou null"
+}`;
+
+  return callAiJSON(instructions, fullText, schema, typeof pdfDocCnpj !== 'undefined' ? pdfDocCnpj : null, schemaTextoGroq);
 }
 
 function cleanSpaces(s){
@@ -4575,7 +4698,7 @@ function renderResults(socios, rawText, source){
          <button class="btn-ai" id="tryAiBtn">🤖 ${socios.length ? 'Tentar de novo com IA' : 'Tentar com IA'}</button>
        </div>`
     : `<div class="ai-banner">
-         <p>Resultado gerado por IA (Gemini). Sempre confira contra o PDF antes de usar oficialmente.</p>
+         <p>Resultado gerado por IA. Sempre confira contra o PDF antes de usar oficialmente.</p>
          <button class="btn-ai btn-ai-ghost" id="tryRegexBtn">↺ Voltar pra leitura automática</button>
        </div>`;
 
@@ -4616,7 +4739,7 @@ function renderResults(socios, rawText, source){
 
   html += `
     <div class="disclaimer">
-      ${source === 'regex' ? 'Extração automática por leitura de texto do PDF' : 'Extração via IA (Gemini)'} — sempre confira os dados contra o documento original antes de usar oficialmente.
+      ${source === 'regex' ? 'Extração automática por leitura de texto do PDF' : 'Extração via IA'} — sempre confira os dados contra o documento original antes de usar oficialmente.
     </div>
   `;
   html += rawTextBlock(rawText);
@@ -4861,7 +4984,7 @@ function renderResultsCnpj(d, rawText, source){
 
   const banner = source === 'ia'
     ? `<div class="ai-banner">
-         <p>Resultado gerado por IA (Gemini). Sempre confira contra o PDF antes de usar oficialmente.</p>
+         <p>Resultado gerado por IA. Sempre confira contra o PDF antes de usar oficialmente.</p>
          <button class="btn-ai btn-ai-ghost" id="tryRegexBtnCnpj">↺ Voltar pra leitura automática</button>
        </div>`
     : `<div class="ai-banner">
@@ -4887,7 +5010,7 @@ function renderResultsCnpj(d, rawText, source){
       </dl>
     </div>
     <div class="disclaimer">
-      ${source === 'ia' ? 'Extração via IA (Gemini)' : 'Extração automática por leitura de texto do PDF'} — sempre confira os dados contra o documento original antes de usar oficialmente.
+      ${source === 'ia' ? 'Extração via IA' : 'Extração automática por leitura de texto do PDF'} — sempre confira os dados contra o documento original antes de usar oficialmente.
     </div>
     ${rawTextBlock(rawText)}
   `;
