@@ -4017,10 +4017,16 @@ const apiKeyClearBtn = document.getElementById('apiKeyClearBtn');
 // ====================================================================
 const WORKER_URL = 'https://winter-salad-78e6.mcustodio-commercial.workers.dev'; // proxy do time (chave fica em segredo no Cloudflare)
 
-// Worker NOVO e separado, só de fallback pra Groq — só é chamado se o Gemini
-// falhar por sobrecarga/limite. Não interfere em nada do WORKER_URL acima.
-// Troque pela URL real depois de publicar o worker-groq-fallback.js.
-const GROQ_FALLBACK_WORKER_URL = 'https://api-outras-ia.mcustodio-commercial.workers.dev';
+// Serviço de OCR (Google Apps Script): transforma PDF escaneado/foto em texto puro
+// via conversão automática do Google Drive, ANTES de mandar pra IA. Isso evita
+// mandar a página como imagem (que consome muito mais tokens e estourava o limite
+// gratuito da Groq).
+const OCR_URL = 'https://script.google.com/macros/s/AKfycbzanl_pIWGlIs5KPbZH1lZj41I9uz-SSnQbqPt7KLBEwlkep0A4O85exoEt4arFgL-x3w/exec';
+
+// Worker de fallback (Groq): só é usado quando o Gemini falha depois de esgotar
+// todas as tentativas (429/503). Como o texto já vem pronto (direto do PDF ou via
+// OCR acima), a Groq nunca recebe imagem — só texto, que é o que ela processa bem.
+const GROQ_WORKER_URL = 'https://api-outras-ia.mcustodio-commercial.workers.dev';
 
 // ====================================================================
 // Envio dos dados extraídos pro formulário do Cadastro: como agora tudo
@@ -4173,6 +4179,7 @@ function hideStatus(){
 }
 
 let lastExtractedText = '';
+let lastPdfBase64 = null; // guarda o PDF original em base64, usado pro OCR se for digitalização
 
 async function handleFile(file){
   if (file.type !== 'application/pdf'){
@@ -4186,6 +4193,9 @@ async function handleFile(file){
 
   try{
     const buffer = await file.arrayBuffer();
+    // Guarda uma cópia em base64 ANTES de entregar pro pdf.js — o pdf.js pode
+    // "consumir" o ArrayBuffer original internamente, então convertemos primeiro.
+    lastPdfBase64 = arrayBufferToBase64(buffer);
     pdfDoc = await pdfjsLib.getDocument({ data: buffer }).promise;
     currentPage = 1;
     pageNav.style.display = 'flex';
@@ -4239,9 +4249,42 @@ async function renderPage(num){
 prevBtn.addEventListener('click', () => { if(currentPage>1){ currentPage--; renderPage(currentPage);} });
 nextBtn.addEventListener('click', () => { if(pdfDoc && currentPage<pdfDoc.numPages){ currentPage++; renderPage(currentPage);} });
 
+// Converte um ArrayBuffer (o PDF original, bytes puros) em uma string base64,
+// no formato que o serviço de OCR espera receber.
+function arrayBufferToBase64(buffer){
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000; // processa em blocos pra não estourar limite de argumentos
+  for (let i = 0; i < bytes.length; i += chunkSize){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+// Manda o PDF (base64) pro serviço de OCR (Google Apps Script) e devolve o texto
+// extraído. Usado quando o PDF é uma digitalização/foto sem texto selecionável.
+async function ocrPdfToText(base64Pdf){
+  const resp = await fetch(OCR_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' }, // evita preflight CORS no Apps Script
+    body: JSON.stringify({ pdfBase64: base64Pdf })
+  });
+
+  if (!resp.ok){
+    throw new Error('Serviço de OCR respondeu ' + resp.status);
+  }
+
+  const data = await resp.json();
+  if (!data.sucesso){
+    throw new Error(data.mensagem || 'Falha desconhecida no OCR.');
+  }
+  return data.texto;
+}
+
 // Usado quando o PDF é uma digitalização/foto sem texto real: renderiza as
 // primeiras páginas como imagem (JPEG) pra mandar pro Gemini "ler" visualmente,
-// já que não há texto nenhum pra extrair via pdf.js nesse caso.
+// já que não há texto nenhum pra extrair via pdf.js nesse caso. Isso agora só
+// entra em ação como ÚLTIMO RECURSO, se o serviço de OCR acima falhar.
 async function renderPagesAsImageParts(doc, numPages){
   const parts = [];
   for (let i = 1; i <= numPages; i++){
@@ -4290,12 +4333,50 @@ async function extractFullText(doc){
   return fullText;
 }
 
-// ---------- Extração via IA (Gemini, gratuito) ----------
+// ---------- Extração via IA (Gemini principal, Groq como backup) ----------
 
-// Monta as partes (texto OU imagens das páginas, se o PDF for uma digitalização
-// sem texto real) e chama o Gemini, devolvendo o objeto JSON já validado contra
-// o schema pedido. Usada tanto pra sócios quanto pro Cartão CNPJ.
-async function callGeminiJSON(instructions, fullText, schema, docRef){
+// Manda o texto pro Worker da Groq (usado só quando o Gemini falha depois de
+// esgotar as tentativas). O Worker da Groq aceita o MESMO formato de payload
+// do Gemini (contents[0].parts) e devolve resposta também nesse formato — por
+// isso conseguimos reaproveitar aqui sem reescrever a lógica de leitura.
+// Como a Groq não suporta um "responseSchema" estruturado feito o Gemini,
+// descrevemos o formato esperado dentro do próprio texto de instrução.
+async function callGroqFallback(instructions, textToUse, schema){
+  const parts = [{
+    text: instructions
+      + `\n\nTexto do documento:\n"""\n${textToUse.slice(0, 60000)}\n"""`
+      + `\n\nResponda em JSON válido seguindo EXATAMENTE esta estrutura (schema): ${JSON.stringify(schema)}`
+  }];
+
+  const resp = await fetch(GROQ_WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ payload: { contents: [{ role: 'user', parts }] } })
+  });
+
+  if (!resp.ok){
+    const errBody = await resp.text().catch(() => '');
+    throw new Error(`Groq (backup) respondeu ${resp.status}: ${errBody.slice(0,200)}`);
+  }
+
+  const data = await resp.json();
+  const textOut = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+  try{
+    return JSON.parse(textOut);
+  }catch(e){
+    throw new Error('O modelo de backup (Groq) respondeu em formato inesperado: ' + textOut.slice(0,150));
+  }
+}
+
+// Monta o texto (extraindo via OCR se for digitalização) e chama o Gemini,
+// devolvendo o objeto JSON já validado contra o schema pedido. Se o Gemini
+// falhar depois de esgotar todas as tentativas, cai automaticamente pra Groq
+// como backup (só quando temos texto — não quando o modo imagem foi usado).
+// Usada tanto pra sócios quanto pro Cartão CNPJ.
+//
+// rawBase64: o PDF original em base64 (pra mandar pro OCR se for digitalização)
+// onStatus: callback opcional pra mostrar mensagens de progresso na tela
+async function callGeminiJSON(instructions, fullText, schema, docRef, rawBase64, onStatus){
   const apiKey = getApiKey();
   if (!WORKER_URL && !apiKey){
     apiKeyModal.classList.add('show');
@@ -4303,19 +4384,37 @@ async function callGeminiJSON(instructions, fullText, schema, docRef){
   }
 
   // Se o PDF extraiu pouco ou nenhum texto, ele provavelmente é uma digitalização/foto
-  // sem camada de texto real. Nesse caso, em vez de mandar texto (que viria vazio),
-  // mandamos as PÁGINAS COMO IMAGEM pro Gemini "ler" visualmente — o modelo suporta
-  // isso nativamente (é multimodal).
+  // sem camada de texto real.
   const isScanned = fullText.replace(/\s/g,'').length < 200;
+  let textToUse = fullText;
   let parts;
-  if (isScanned && docRef){
-    const imageParts = await renderPagesAsImageParts(docRef, Math.min(docRef.numPages, 6));
-    parts = [
-      ...imageParts,
-      { text: instructions + '\n\nEsse PDF é uma digitalização/foto (sem texto selecionável) — leia o conteúdo diretamente nas imagens das páginas acima.' }
-    ];
-  } else {
-    parts = [{ text: instructions + `\n\nTexto do documento:\n"""\n${fullText.slice(0, 60000)}\n"""` }];
+  let imageMode = false; // true = usando páginas como imagem (só Gemini, sem backup Groq)
+
+  if (isScanned){
+    if (rawBase64){
+      try{
+        onStatus && onStatus('Processando o documento');
+        textToUse = await ocrPdfToText(rawBase64);
+      }catch(ocrErr){
+        console.error('OCR falhou, usando modo imagem como último recurso:', ocrErr);
+      }
+    }
+
+    // Se o OCR não rodou ou não trouxe texto útil, cai pro modo antigo (imagem
+    // direto pro Gemini) como último recurso — mais caro em tokens, mas garante
+    // que ainda funcione mesmo se o serviço de OCR estiver fora do ar.
+    if (textToUse.replace(/\s/g,'').length < 50 && docRef){
+      imageMode = true;
+      const imageParts = await renderPagesAsImageParts(docRef, Math.min(docRef.numPages, 6));
+      parts = [
+        ...imageParts,
+        { text: instructions + '\n\nEsse PDF é uma digitalização/foto (sem texto selecionável) — leia o conteúdo diretamente nas imagens das páginas acima.' }
+      ];
+    }
+  }
+
+  if (!parts){
+    parts = [{ text: instructions + `\n\nTexto do documento:\n"""\n${textToUse.slice(0, 60000)}\n"""` }];
   }
 
   // O Google troca os nomes/versões dos modelos gratuitos com frequência — se um
@@ -4371,37 +4470,33 @@ async function callGeminiJSON(instructions, fullText, schema, docRef){
     // o corpo da resposta só pode ser lido uma vez — se já lemos durante as
     // tentativas (503/429/404), reaproveitamos; senão lemos agora.
     const errBody = lastErrBody || await resp.text().catch(() => '');
+    let geminiErrMsg;
+    if (resp.status === 400 || resp.status === 403){
+      geminiErrMsg = 'Chave de API inválida, expirada ou sem permissão (confira em 🔑 Chave de API). Detalhe: ' + errBody.slice(0,200);
+    } else if (resp.status === 429){
+      geminiErrMsg = 'Limite gratuito da API atingido no momento.';
+    } else if (resp.status === 503){
+      geminiErrMsg = 'Os modelos gratuitos do Gemini estão sobrecarregados agora (isso é do Google, não do site).';
+    } else if (resp.status === 404){
+      geminiErrMsg = 'Nenhum dos modelos do Gemini testados (' + MODEL_CANDIDATES.join(', ') + ') respondeu.';
+    } else {
+      geminiErrMsg = `Erro ${resp.status} na API do Gemini (modelo ${usedModel}). ` + errBody.slice(0,200);
+    }
 
-    // Gemini sobrecarregado ou limite atingido: tenta o Worker de fallback (Groq)
-    // antes de desistir. Se o fallback não estiver configurado ou também falhar,
-    // cai nos erros de sempre logo abaixo, sem mudar nada do comportamento original.
-    if ((resp.status === 429 || resp.status === 503) && GROQ_FALLBACK_WORKER_URL && !GROQ_FALLBACK_WORKER_URL.includes('COLOQUE-AQUI')){
+    // Só tenta o backup (Groq) se: não estamos em modo imagem (Groq não recebe
+    // imagem aqui), o erro é do tipo "tente de novo" (429/503), e a Groq está
+    // configurada. Erros de chave inválida (400/403) não adiantam tentar de novo.
+    const erroTemporario = resp.status === 429 || resp.status === 503 || resp.status === 404;
+    if (!imageMode && erroTemporario && GROQ_WORKER_URL){
       try{
-        const fallbackResp = await fetch(GROQ_FALLBACK_WORKER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload: { contents: [{ role: 'user', parts }] } })
-        });
-        if (fallbackResp.ok) return await fallbackResp.json();
-      }catch(fallbackErr){
-        console.error('Fallback pra Groq também falhou:', fallbackErr);
-        // segue abaixo e mostra o erro original do Gemini
+        onStatus && onStatus('Gemini indisponível — tentando modelo de backup (Groq)…');
+        return await callGroqFallback(instructions, textToUse, schema);
+      }catch(groqErr){
+        throw new Error(geminiErrMsg + ' Backup (Groq) também falhou: ' + groqErr.message);
       }
     }
 
-    if (resp.status === 400 || resp.status === 403){
-      throw new Error('Chave de API inválida, expirada ou sem permissão (confira em 🔑 Chave de API). Detalhe: ' + errBody.slice(0,200));
-    }
-    if (resp.status === 429){
-      throw new Error('Limite gratuito da API atingido no momento — espere um pouco e tente de novo.');
-    }
-    if (resp.status === 503){
-      throw new Error('Os modelos gratuitos do Gemini estão sobrecarregados agora (isso é do Google, não do site). Espere um minuto e tente de novo.');
-    }
-    if (resp.status === 404){
-      throw new Error('Nenhum dos modelos do Gemini testados (' + MODEL_CANDIDATES.join(', ') + ') respondeu. O Google pode ter renomeado o modelo — me avise que eu atualizo.');
-    }
-    throw new Error(`Erro ${resp.status} na API do Gemini (modelo ${usedModel}). ` + errBody.slice(0,200));
+    throw new Error(geminiErrMsg + (imageMode ? ' Tente novamente em instantes.' : ''));
   }
 
   const data = await resp.json();
@@ -4455,7 +4550,14 @@ Para cada sócio, extraia (deixe null quando a informação não existir, não i
 - quotas: número de quotas que ele detém
 - percentual: percentual de participação na sociedade (ex: "50%")`;
 
-  const parsed = await callGeminiJSON(instructions, fullText, schema, typeof pdfDoc !== 'undefined' ? pdfDoc : null);
+  const parsed = await callGeminiJSON(
+    instructions,
+    fullText,
+    schema,
+    typeof pdfDoc !== 'undefined' ? pdfDoc : null,
+    lastPdfBase64,
+    (msg) => showStatus(msg, 'info')
+  );
   return (parsed.socios || []).filter(s => s.nome);
 }
 
@@ -4490,7 +4592,14 @@ async function extractCnpjWithAI(fullText){
 - municipio: município
 - uf: sigla do estado (2 letras)`;
 
-  return callGeminiJSON(instructions, fullText, schema, typeof pdfDocCnpj !== 'undefined' ? pdfDocCnpj : null);
+  return callGeminiJSON(
+    instructions,
+    fullText,
+    schema,
+    typeof pdfDocCnpj !== 'undefined' ? pdfDocCnpj : null,
+    lastPdfBase64Cnpj,
+    (msg) => showStatusCnpj(msg, 'info')
+  );
 }
 
 function cleanSpaces(s){
@@ -4722,6 +4831,8 @@ function showStatusCnpj(msg, type){
 }
 function hideStatusCnpj(){ statusCnpjEl.className = ''; }
 
+let lastPdfBase64Cnpj = null; // guarda o PDF original em base64, usado pro OCR se for digitalização
+
 async function handleFileCnpj(file){
   if (file.type !== 'application/pdf'){
     showStatusCnpj('Esse arquivo não é um PDF. Envie o PDF do Cartão CNPJ.', 'error');
@@ -4734,6 +4845,7 @@ async function handleFileCnpj(file){
 
   try{
     const buffer = await file.arrayBuffer();
+    lastPdfBase64Cnpj = arrayBufferToBase64(buffer);
     pdfDocCnpj = await pdfjsLib.getDocument({ data: buffer }).promise;
     currentPageCnpj = 1;
     pageNavCnpj.style.display = 'flex';
