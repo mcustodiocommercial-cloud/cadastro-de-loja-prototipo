@@ -4380,7 +4380,7 @@ async function callGeminiJSON(instructions, fullText, schema, docRef){
         const fallbackResp = await fetch(GROQ_FALLBACK_WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload })
+          body: JSON.stringify({ payload: { contents: [{ role: 'user', parts }] } })
         });
         if (fallbackResp.ok) return await fallbackResp.json();
       }catch(fallbackErr){
