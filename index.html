@@ -614,8 +614,21 @@
     color: #fff;
     border-color: #142A45;
   }
+  .fill-progress-sticky{
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E4E8EE;
+    padding: 10px 24px 8px;
+    box-shadow: 0 2px 6px rgba(20,42,69,.06);
+  }
+  .fill-progress-sticky .inner{
+    max-width: 1180px;
+    margin: 0 auto;
+  }
   .fill-progress-wrap{
-    margin-top: 16px;
+    margin-top: 0;
     height: 8px;
     border-radius: 8px;
     background: rgba(20,42,69,.15);
@@ -1485,10 +1498,15 @@
       <button type="button" class="view-mode-tab" data-mode="documentos">📑 Gerar Formulários</button>
       <button type="button" class="view-mode-tab" data-mode="extrator">📥 Extrair Dados</button>
     </div>
+  </div>
+</header>
+
+<div class="fill-progress-sticky">
+  <div class="inner">
     <div class="fill-progress-wrap"><div class="fill-progress-bar" id="fill-progress-bar"></div></div>
     <div class="fill-progress-label" id="fill-progress-label">0% dos campos obrigatórios preenchidos</div>
   </div>
-</header>
+</div>
 
 <main>
   <div class="toolbar-row">
