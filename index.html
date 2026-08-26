@@ -609,6 +609,11 @@
     text-align: center;
   }
   .view-mode-tab:hover{ background: rgba(20,42,69,.18); }
+  .view-mode-tab:disabled{
+    opacity: .45;
+    cursor: not-allowed;
+    background: rgba(20,42,69,.10);
+  }
   .view-mode-tab.active{
     background: #142A45;
     color: #fff;
@@ -1473,6 +1478,18 @@
     border:1px solid var(--navy);
     background: var(--navy);
     color:#fff;
+  }  .status-modal-box.blocked .status-modal-icon{ color:#C0392B; }
+  .status-modal-box.blocked h2{ color:#C0392B; }
+  .status-modal-box.blocked button{ border-color:#C0392B; background:#C0392B; }
+
+  body.cadastro-bloqueado .panel label,
+  body.cadastro-bloqueado .panel input,
+  body.cadastro-bloqueado .panel select,
+  body.cadastro-bloqueado .panel textarea,
+  body.cadastro-bloqueado .panel legend,
+  body.cadastro-bloqueado .sheet-wrap,
+  body.cadastro-bloqueado .sheet-wrap *{
+    color: #C0392B !important;
   }
 </style>
 </head>
@@ -1484,6 +1501,15 @@
     <h2>Todos os campos obrigatórios foram preenchidos</h2>
     <p>Agora vamos gerar os formulários para você conferir e imprimir.</p>
     <button type="button" id="formCompletoBtn">📑 Gerar Formulários</button>
+  </div>
+</div>
+
+<div class="status-modal-overlay" id="razaoProibidaModal">
+  <div class="status-modal-box blocked">
+    <div class="status-modal-icon">⛔</div>
+    <h2>CADASTRO NÃO PERMITIDO!</h2>
+    <p id="razaoProibidaMsg">O termo consta na Razão Social. Não será possível seguir com o cadastro.</p>
+    <button type="button" id="razaoProibidaBtn">Entendi</button>
   </div>
 </div>
 
@@ -1878,7 +1904,7 @@
           </div>
           <div class="field">
             <label for="complemento_sede">Complemento</label>
-            <input type="text" id="complemento_sede" data-target="complemento_sede">
+            <input type="text" id="complemento_sede" data-target="complemento_sede" maxlength="7">
           </div>
         </div>
         <div class="row2">
@@ -2379,7 +2405,7 @@
           <div class="frow" style="height:17.9mm;">
             <div class="fcell sign-row" style="width:100%;">
               <div class="sign-left" style="padding-right:4%;">
-                <div class="sign-date"><span class="out" data-field="cidade_ficha" data-ph="[cidade]">[cidade]</span>, <span class="out" data-field="data_ficha" data-ph="[data]">[data]</span></div>
+                <div class="sign-date"><span class="out" data-field="cidade" data-ph="[cidade]">[cidade]</span>, <span class="out" data-field="data_assinatura" data-ph="[data]">[data]</span></div>
                 <div class="sign-line">Local e data</div>
               </div>
               <div class="sign-right" style="display:flex; gap:8%; padding-left:4%;">
@@ -2777,6 +2803,48 @@
       return true;
     });
   }
+
+  // ---------- Bloqueio por palavra proibida na Razão Social ----------
+  var PALAVRAS_PROIBIDAS = [
+    "banco", "bank", "bancario", "bancário", "banking", "bancaria", "bancária",
+    "financeiro", "financeira", "financeiros", "financeiras",
+    "instituicao financeira", "instituição financeira", "instituicao", "instituição",
+    "sociedade de credito", "sociedade de crédito", "sociedade financeira",
+    "cooperativa de credito", "cooperativa de crédito", "credito", "crédito",
+    "consorcio", "consórcio", "bancarios", "bancários",
+    "banco comercial", "banco digital"
+  ];
+  var cadastroBloqueado = false;
+  var razaoProibidaModalMostrado = false;
+
+  function palavraProibidaEm(texto){
+    var alvo = (texto || "").toLowerCase();
+    for(var i = 0; i < PALAVRAS_PROIBIDAS.length; i++){
+      if(alvo.indexOf(PALAVRAS_PROIBIDAS[i].toLowerCase()) !== -1){ return PALAVRAS_PROIBIDAS[i]; }
+    }
+    return null;
+  }
+
+  function verificarRazaoSocial(razaoSocial){
+    var palavra = palavraProibidaEm(razaoSocial);
+    cadastroBloqueado = !!palavra;
+    document.body.classList.toggle("cadastro-bloqueado", cadastroBloqueado);
+
+    if(cadastroBloqueado){
+      if(!razaoProibidaModalMostrado){
+        razaoProibidaModalMostrado = true;
+        document.getElementById("razaoProibidaMsg").textContent =
+          "O termo \"" + palavra.toUpperCase() + "\" consta na Razão Social. Não será possível seguir com o cadastro.";
+        var modal = document.getElementById("razaoProibidaModal");
+        if(modal){ modal.classList.add("show"); }
+      }
+    } else {
+      razaoProibidaModalMostrado = false;
+    }
+
+    var tabDocumentos = document.querySelector('.view-mode-tab[data-mode="documentos"]');
+    if(tabDocumentos){ tabDocumentos.disabled = cadastroBloqueado; }
+  }
   var STORAGE_KEY = "carta-dados-bancarios-vw-v1";
   // Evita reabrir o modal a cada tecla digitada enquanto o formulário já
   // está 100% completo — só mostra de novo se ele cair abaixo de 100% e
@@ -2838,6 +2906,7 @@
       }
     });
     save(data);
+    verificarRazaoSocial(data.razao_social);
     updateStatus(data);
   }
 
@@ -2951,7 +3020,7 @@
       aplicados.push("Número");
     }
     if(found.complemento){
-      document.getElementById("complemento_sede").value = found.complemento;
+      document.getElementById("complemento_sede").value = found.complemento.slice(0, 7);
       aplicados.push("Complemento");
     }
     if(found.bairro){
@@ -2985,7 +3054,7 @@
     if(c.dataAbertura){ document.getElementById("data_constituicao").value = c.dataAbertura; }
     if(c.logradouro){ document.getElementById("endereco_sede").value = c.logradouro; }
     if(c.numero && c.numero !== "S/N"){ document.getElementById("numero_sede").value = c.numero; }
-    if(c.complemento){ document.getElementById("complemento_sede").value = c.complemento; }
+    if(c.complemento){ document.getElementById("complemento_sede").value = c.complemento.slice(0, 7); }
     if(c.bairro){ document.getElementById("bairro_sede").value = c.bairro; }
     if(c.cep){ document.getElementById("cep_sede").value = c.cep; }
     if(c.municipio){
@@ -3713,6 +3782,13 @@
       return { conta: soNumeros(partes[0]), digito: partes[1] ? soNumeros(partes[1]) : "" };
     }
 
+    function separarAgencia(valor){
+      // "1234-5" -> { agencia:"1234", digito:"5" }; sem "-", assume dígito "0"
+      if(!valor){ return { agencia: "", digito: "" }; }
+      var partes = valor.split("-");
+      return { agencia: soNumeros(partes[0]), digito: partes[1] ? soNumeros(partes[1]) : "0" };
+    }
+
     async function gerarInputXlsx(){
       // Carrega o arquivo-modelo real (template-input.xlsx, com toda a
       // formatação/cores/linhas e colunas ocultas já prontas) e só injeta os
@@ -3730,6 +3806,7 @@
 
       var telefone = separarTelefone(v("repr_celular"));
       var conta = separarConta(v("banco_conta"));
+      var agencia = separarAgencia(v("banco_agencia"));
 
       // Cada item: { col, valor, tipo: "numero"|"texto" }
       var DADOS = [
@@ -3745,7 +3822,8 @@
         { col: 12, valor: v("razao_social").slice(0, 40), tipo: "texto" },
         { col: 13, valor: v("repr_email"), tipo: "texto" },
         { col: 14, valor: v("banco_numero"), tipo: "texto" },
-        { col: 15, valor: v("banco_agencia"), tipo: "numero" },
+        { col: 15, valor: agencia.agencia, tipo: "numero" },
+        { col: 16, valor: agencia.digito, tipo: "numero" },
         { col: 17, valor: conta.conta, tipo: "numero" },
         { col: 18, valor: conta.digito, tipo: "numero" },
         { col: 19, valor: v("numero_sede"), tipo: "numero" },
@@ -3939,6 +4017,15 @@
     });
     formCompletoModalEl.addEventListener("click", function(e){
       if(e.target === formCompletoModalEl){ formCompletoModalEl.classList.remove("show"); }
+    });
+
+    // ---- Modal de "razão social com termo proibido" ----
+    var razaoProibidaModalEl = document.getElementById("razaoProibidaModal");
+    document.getElementById("razaoProibidaBtn").addEventListener("click", function(){
+      razaoProibidaModalEl.classList.remove("show");
+    });
+    razaoProibidaModalEl.addEventListener("click", function(e){
+      if(e.target === razaoProibidaModalEl){ razaoProibidaModalEl.classList.remove("show"); }
     });
 
     // ---- Zoom da pré-visualização ----
