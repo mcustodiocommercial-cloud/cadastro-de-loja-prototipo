@@ -3752,15 +3752,6 @@
         cell.value = item.tipo === "numero" && /^\d+$/.test(item.valor) ? Number(item.valor) : item.valor;
       });
 
-      // O ExcelJS não preserva a propriedade "zeroHeight" da planilha original
-      // (que ocultava automaticamente qualquer linha não declarada) — ela se
-      // perde ao regravar o arquivo. Por isso garantimos de novo manualmente
-      // pra faixa além da linha 26, que já vem oculta no modelo.
-      for (var rOcultar = 3; rOcultar <= 1048576; rOcultar++){
-        var linhaOcultar = ws.getRow(rOcultar);
-        linhaOcultar.getCell(1);
-        linhaOcultar.hidden = true;
-      }
 
       var buffer = await wb.xlsx.writeBuffer();
       var blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
