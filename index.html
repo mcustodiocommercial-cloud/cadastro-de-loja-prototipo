@@ -3694,12 +3694,8 @@
       var partes = (valor || "").split("-");
       return { conta: soNumeros(partes[0]), digito: partes[1] ? soNumeros(partes[1]) : "" };
     }
-
-    async function gerarInputXlsx(){
-      // Carrega o arquivo-modelo real (template-input.xlsx, com toda a
-      // formatação/cores/linhas e colunas ocultas já prontas) e só injeta os
-      // dados do cadastro na linha 2 — não recriamos formatação nenhuma na mão,
-      // então é impossível "esquecer" um detalhe do modelo.
+async function gerarInputXlsx(){
+      // Carrega o arquivo-modelo real (template-input.xlsx)
       var resp = await fetch("template-input.xlsx");
       if(!resp.ok){
         alert("Não encontrei o arquivo \"template-input.xlsx\" ao lado do index.html. Suba esse arquivo no mesmo repositório do GitHub Pages.");
@@ -3743,23 +3739,21 @@
         { col: 31, valor: v("categoria"), tipo: "texto" }
       ];
 
-      // Só o valor muda — a formatação (cor, alinhamento, negrito das colunas
-      // de destaque etc.) já vem pronta do estilo da própria célula/linha 2
-      // no arquivo-modelo, então não mexemos em cell.font/numFmt/alignment aqui.
+      // Injeta os dados na linha 2
       DADOS.forEach(function(item){
         if(!item.valor){ return; }
         var cell = ws.getCell(2, item.col);
         cell.value = item.tipo === "numero" && /^\d+$/.test(item.valor) ? Number(item.valor) : item.valor;
       });
 
-      // O ExcelJS não preserva a propriedade "zeroHeight" da planilha original
-      // (que ocultava automaticamente qualquer linha não declarada) — ela se
-      // perde ao regravar o arquivo. Por isso garantimos de novo manualmente
-      // pra faixa além da linha 26, que já vem oculta no modelo.
-      for (var rOcultar = 27; rOcultar <= 2000; rOcultar++){
+      // --- CORREÇÃO DE OCULTAÇÃO DE LINHAS ---
+      // 1. Caso você deseje ocultar linhas específicas entre a linha 3 e a 26 (exemplo: linha 3 até a 26 se não houverem dados):
+      // Para ocultar da linha 3 em diante até a linha 2000:
+      for (var rOcultar = 3; rOcultar <= 2000; rOcultar++){
+        // Se desejar manter algumas linhas visíveis (ex: linha 3), altere o início do loop
         var linhaOcultar = ws.getRow(rOcultar);
-        linhaOcultar.getCell(1);
         linhaOcultar.hidden = true;
+        linhaOcultar.height = 0; // Força a altura zero para compatibilidade total com o Excel
       }
 
       var buffer = await wb.xlsx.writeBuffer();
