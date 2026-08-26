@@ -3752,13 +3752,13 @@
         cell.value = item.tipo === "numero" && /^\d+$/.test(item.valor) ? Number(item.valor) : item.valor;
       });
 
-      // O ExcelJS não preserva a propriedade "zeroHeight" da planilha original
-      // (que ocultava automaticamente qualquer linha não declarada) — ela se
-      // perde ao regravar o arquivo. Por isso garantimos de novo manualmente
-      // pra faixa além da linha 26, que já vem oculta no modelo.
-      if (!ws.sheetFormatProperties) { ws.sheetFormatProperties = {}; }
-      ws.sheetFormatProperties.zeroHeight = true;
-      ws.sheetFormatProperties.defaultRowHeight = 0;
+     // Define altura padrão da planilha como zero — cobre qualquer linha
+// que não seja explicitamente definida, sem precisar iterar até 1048576
+ws.properties.defaultRowHeight = 0;
+
+// Garante que as linhas usadas (1 e 2) mantenham altura normal
+ws.getRow(1).height = 15; // ou o valor original desejado
+ws.getRow(2).height = 15;
       }
 
       var buffer = await wb.xlsx.writeBuffer();
