@@ -3755,17 +3755,16 @@
       // O ExcelJS não preserva a propriedade "zeroHeight" da planilha original
       // (que ocultava automaticamente qualquer linha não declarada) — ela se
       // perde ao regravar o arquivo. Em vez de ocultar, deixamos a altura
-      // dessas linhas em zero. Guardamos antes a altura das linhas 1 e 2 pra
-      // restaurar depois, já que "defaultRowHeight" afeta qualquer linha sem
-      // altura explícita — e cobre a faixa da linha 3 até o limite do Excel
-      // (1.048.576) sem precisar percorrer linha por linha.
-      var alturaLinha1 = ws.getRow(1).height;
-      var alturaLinha2 = ws.getRow(2).height;
-
+      // dessas linhas em zero via "defaultRowHeight", que cobre a faixa da
+      // linha 3 até o limite do Excel (1.048.576) sem precisar percorrer
+      // linha por linha. A linha 1 já tem altura explícita gravada no
+      // modelo, então não é afetada. Já a linha 2 não tinha altura
+      // explícita (só usava a altura padrão da planilha) — por isso
+      // fixamos o valor manualmente aqui, senão ela cairia no mesmo
+      // "defaultRowHeight" zerado.
       ws.properties.defaultRowHeight = 0;
 
-      ws.getRow(1).height = alturaLinha1;
-      ws.getRow(2).height = alturaLinha2;
+      ws.getRow(2).height = 14.5;
 
       var buffer = await wb.xlsx.writeBuffer();
       var blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
