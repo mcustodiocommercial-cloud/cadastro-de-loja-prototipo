@@ -759,6 +759,15 @@
     min-width: 0;
   }
   .sheet .fcell:last-child{ border-right: none; }
+  /* As 3 grades (Administração, Principais Acionistas, Participação) são
+     preenchidas dinamicamente em containers próprios — a regra genérica
+     ".frow:last-child" acima removeria a borda de baixo da última linha de
+     CADA uma delas (por ser a "última" dentro do seu próprio container),
+     deixando a grade "aberta" antes do título da seção seguinte. Fechamos
+     de volta aqui. */
+  #fc-tbody-administracao .frow:last-child,
+  #fc-tbody-acionistas .frow:last-child,
+  #fc-tbody-participacao .frow:last-child{ border-bottom: 1px solid #000; }
   .sheet .lbl{
     display: block;
     font-size: 6.3px;
@@ -792,6 +801,7 @@
     font-size: 6.8px;
     text-align: center;
   }
+  .sheet .val-center{ text-align: center; }
   .sheet .chk{
     display: inline-block;
     width: 8px;
@@ -856,6 +866,8 @@
     position: absolute;
     top: 4px;
     left: 0;
+    right: 0;
+    text-align: center;
   }
   .sheet .sign-line{
     border-top: 1px solid #000;
@@ -1012,6 +1024,7 @@
   @media print{
     body{ margin: 0; background: #fff; }
     header.top{ display: none; }
+    .fill-progress-sticky{ display: none !important; }
     main{ display: block; padding: 0; margin: 0; max-width: none; }
     .panel{ display: none; }
     .toolbar-row{ display: none !important; }
@@ -2381,7 +2394,7 @@
                 <div style="display:flex; align-items:center;">
                   <span style="margin-right:4px; visibility:hidden;">Propósito:</span>
                   <span class="chk" id="fc-check-proposito-outros"></span>
-                  <span style="margin-left:2px;">Outros (especificar) <span class="out" data-field="proposito_outros_texto" data-ph="________________________">________________________</span></span>
+                  <span style="margin-left:2px;">Outros (especificar) <span class="out" data-field="proposito_outros_texto" data-ph="________________________" style="color:#000 !important; font-style:normal;">________________________</span></span>
                 </div>
               </div>
             </div>
@@ -2648,7 +2661,7 @@
 <p>9.4.1.1. Desde já o CORRESPONDENTE se obriga a entregar a documentação referida no item 9.4.1 acima em prazo inferior a 05 (cinco) dias úteis caso o CONTRATANTE indique a necessidade de recebê-la com maior antecedência para viabilizar atendimento de prazo judicial ou administrativo a que esteja sujeito.</p>
 <p>9.5. Caso seja disponibilizado sistema informatizado pelo CONTRATANTE, o CORRESPONDENTE se obriga a observar fielmente a Política de Segurança da Informação do CONTRATANTE, inclusive quanto a não revelação de senha e login de acesso.</p>
 <p>9.5.1. Se solicitado pelo CONTRATANTE, o CORRESPONDENTE indicará um “Usuário Máster”, que será previamente cadastrado junto ao CONTRATANTE. O Usuário Máster será o responsável pela concessão e bloqueio de novos acessos a funcionários do CORRESPONDENTE. Todos os usuários, inclusive o Usuário Máster, devem, sob pena de exclusão do acesso: (i) ser representante legal nomeado no contrato social ou manter vínculo empregatício com o CORRESPONDENTE, o que deverá ser comprovado ao CONTRATANTE sempre que solicitado; e (ii) ser devidamente certificados.</p>
-<p>9.5.2. Para fins de indicação de “Usuário Máster” o CORRESPONDENTE indica o e-mail a seguir:</p>
+<p>9.5.2. Para fins de indicação de “Usuário Máster” o CORRESPONDENTE indica o e-mail a seguir: <span class="out" data-field="email" data-ph="&nbsp;">&nbsp;</span></p>
 <p>9.5.3. A senha é de uso pessoal e intransferível, devendo ser mantida em segurança e somente utilizada por seu titular. O uso indevido por terceiros é de inteira responsabilidade do CORRESPONDENTE.</p>
 <p>9.5.4. Em caso de alteração do “Usuário Máster” indicado na cláusula 9.5.2, fica o CORRESPONDENTE obrigado a comunicar novo e-mail para fins de regularização do novo cadastro.</p>
 <p><b>10. DECLARAÇÕES E COMPLIANCE.</b> Atentas às disposições contidas na Lei nº 12.846, de 1º de agosto de 2013, as Partes declaram possuir códigos próprios de conduta que contemplam as diretrizes e os princípios de comportamento ético a que se subordinam os seus administradores, empregados e colaboradores, e programas de compliance que estabelecem regras claras para para a condução e supervisão das suas atividades, que definem critérios objetivos para avaliação da conformidade de suas condutas com os preceitos legais e com as demais normas a que se sujeitam, contando com estruturas e procedimentos voltados a coibir ou a impedir a prática de infrações à referida Lei e às demais com semelhante ou relacionado escopo e a identificar desvios de conduta de seus administradores, empregados e demais colaboradores a elas direta ou indiretamente vinculados.</p>
@@ -2686,8 +2699,8 @@
 <div class="sig-bank-row">
   <div class="sig-bank-field">BANCO VOLKSWAGEN S.A.</div>
   <div class="sig-bank-field">
-    <span class="out" data-field="corresp_nome" data-ph="&nbsp;">&nbsp;</span><br>
-    <span class="out" data-field="corresp_cpf" data-ph="&nbsp;">&nbsp;</span>
+    <span class="out" data-field="razao_social" data-ph="&nbsp;">&nbsp;</span><br>
+    <span class="out" data-field="cnpj" data-ph="&nbsp;">&nbsp;</span>
   </div>
 </div>
 <p class="sig-witness-label">Testemunhas:</p>
@@ -2697,6 +2710,7 @@
   <div class="sig-field-plain"><span class="sig-line-label">RG :</span></div>
   <div class="sig-field-plain"><span class="sig-line-label">RG :</span></div>
 </div>
+<br><br><br><br><br><br><br><br><br><br>
 <p class="anexo-title">ANEXO I – CONDIÇÕES COMERCIAIS E OPERACIONAIS</p>
 <p><b>1. OBJETO DA PRESTAÇÃO DE SERVIÇOS:</b></p>
 <div class="chkline"><span class="chk">X</span>coleta de informações cadastrais</div>
@@ -3054,7 +3068,6 @@
     if(c.dataAbertura){ document.getElementById("data_constituicao").value = c.dataAbertura; }
     if(c.logradouro){ document.getElementById("endereco_sede").value = c.logradouro; }
     if(c.numero && c.numero !== "S/N"){ document.getElementById("numero_sede").value = c.numero; }
-    if(c.complemento){ document.getElementById("complemento_sede").value = c.complemento.slice(0, 7); }
     if(c.bairro){ document.getElementById("bairro_sede").value = c.bairro; }
     if(c.cep){ document.getElementById("cep_sede").value = c.cep; }
     if(c.municipio){
@@ -3422,32 +3435,56 @@
       : tabela === "acionistas" ? [37.5, 26.1, 31.3, 5.1]
       : [37.5, 26.1, 36.4];
 
+    // CPF/CNPJ (índice 1), % sobre capital (índice 2) e I/C ficam centralizados.
+    var colunasCentralizadas = tabela === "acionistas" ? [1, 2, 3]
+      : tabela === "administracao" ? [1, 2]
+      : [1];
+
     fichaData[tabela].forEach(function(row){
       var frow = document.createElement("div");
       frow.className = "frow";
       frow.style.height = "3.6mm";
 
-      function addCell(width, texto){
+      function addCell(width, texto, indice){
         var cell = document.createElement("div");
-        cell.className = "fcell val";
+        cell.className = "fcell val" + (colunasCentralizadas.indexOf(indice) !== -1 ? " val-center" : "");
         cell.style.width = width + "%";
         cell.textContent = (texto && texto.trim()) ? texto : "\u00A0";
         frow.appendChild(cell);
       }
 
-      addCell(larguras[0], row.nome);
-      addCell(larguras[1], row.cpf);
+      addCell(larguras[0], row.nome, 0);
+      addCell(larguras[1], row.cpf, 1);
       if(tabela === "acionistas"){
-        addCell(larguras[2], row.pct);
-        addCell(larguras[3], row.ic);
+        addCell(larguras[2], row.pct, 2);
+        addCell(larguras[3], row.ic, 3);
       } else if(tabela === "administracao"){
-        addCell(larguras[2], row.ic);
+        addCell(larguras[2], row.ic, 2);
       } else if(tabela === "participacao"){
-        addCell(larguras[2], row.pct);
+        addCell(larguras[2], row.pct, 2);
       }
 
       container.appendChild(frow);
     });
+
+    // O formulário original sempre traz a grade com pelo menos 3 linhas
+    // (mesmo em branco) — completamos aqui se houver menos dados que isso.
+    var minimoLinhas = 3;
+    for(var i = fichaData[tabela].length; i < minimoLinhas; i++){
+      var frowVazia = document.createElement("div");
+      frowVazia.className = "frow";
+      frowVazia.style.height = "3.6mm";
+
+      larguras.forEach(function(largura, indice){
+        var cellVazia = document.createElement("div");
+        cellVazia.className = "fcell val" + (colunasCentralizadas.indexOf(indice) !== -1 ? " val-center" : "");
+        cellVazia.style.width = largura + "%";
+        cellVazia.textContent = "\u00A0";
+        frowVazia.appendChild(cellVazia);
+      });
+
+      container.appendChild(frowVazia);
+    }
   }
 
   function renderFichaChecksAndAddress(){
